@@ -15,9 +15,9 @@ import win32ui
 import win32con
 import ctypes
 import ctypes.wintypes
-from  ctypes import *
-import time
-import FrameSegment
+from ctypes import *
+
+from FrameSegment import *
 
 def main(hwnd):
     """ Top level main function """

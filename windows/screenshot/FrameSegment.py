@@ -1,3 +1,5 @@
+import threading
+import time
 class FrameSegment(threading.Thread):
     """
     Object to break down image frame segment
