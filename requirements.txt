@@ -2,4 +2,5 @@ mss
 opencv-python
 pywin32
 d3dshot
-torch
+pyaudio
+wave

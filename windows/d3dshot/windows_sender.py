@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import cv2
 import socket
 import time
