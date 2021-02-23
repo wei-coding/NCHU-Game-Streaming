@@ -2,21 +2,14 @@
 
 from __future__ import division
 import cv2
-import numpy as np
 import socket
-import struct
-import math
 import time
 import threading
-import background
-from PIL import Image
 import win32gui
-import win32ui
-import win32con
-import ctypes
-import ctypes.wintypes
-from ctypes import *
-
+import numpy as np
+import screenshot
+import d3dshot
+from FpsMeter import *
 from FrameSegment import *
 
 def main(hwnd):
@@ -26,13 +19,23 @@ def main(hwnd):
     port = 12345
     fs = FrameSegment(s, port)
     fs.start()
+    fm = FpsMeter(interval=5)
+    fm.start()
+    ss = screenshot.gpu_screenshots()
     while True:
         try:
-            img = background.background_screenshot(hwnd)
-        except:
-            break
-        img = cv2.cvtColor(np.asarray(img),cv2.COLOR_RGB2BGR)
-        fs.add_buffer(img)
+            #img = screenshot.background_screenshot(hwnd)
+            img = ss.get_frames()
+            print(img)
+            img = cv2.cvtColor(np.asarray(img),cv2.COLOR_RGB2BGR)
+            fs.add_buffer(img)
+            fm.inc_count()
+            print('successed')
+        except Exception:
+            print('can\'t find window')
+            continue
+        #print('screenshot successed.')
+        
     s.close()
 
 

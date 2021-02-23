@@ -6,6 +6,7 @@ import ctypes.wintypes
 from  ctypes import *
 from PIL import Image
 import time
+import d3dshot
 
 count = 0
 
@@ -60,6 +61,16 @@ def background_screenshot(hwnd):
         count += 1
     '''
     return im
+class gpu_screenshots():
+    def __init__(self):
+        self.d = d3dshot.create(capture_output="numpy")
+    def shot(self):
+        while True:
+            self.d.capture()
+            time.sleep(1)
+            self.d.stop()
+    def get_frames(self):
+        return self.d.get_latest_frame()
 
 if __name__ == '__main__':
     hwnd = win32gui.FindWindow(None, '控制台')
