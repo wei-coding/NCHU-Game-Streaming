@@ -7,7 +7,7 @@ import d3dshot
 from FpsMeter import *
 from FrameSegment import *
 
-def main(hwnd):
+def main():
     """ Top level main function """
     # Set up UDP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

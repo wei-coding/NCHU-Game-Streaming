@@ -27,7 +27,7 @@ class FrameSegment(threading.Thread):
         while(self.go):
             if(len(self.buffer) != 0):
                 img = self.buffer.pop()
-                compress_img = cv2.imencode('.jpg', img)[1]
+                compress_img = cv2.imencode('.png', img)[1]
                 dat = compress_img.tostring()
                 size = len(dat)
                 count = math.ceil(size/(self.MAX_IMAGE_DGRAM))
@@ -42,6 +42,6 @@ class FrameSegment(threading.Thread):
                     array_pos_start = array_pos_end
                     count -= 1
             else:
-                time.sleep(0.01)
+                time.sleep(0.1)
     def add_buffer(self,img):
         self.buffer.insert(0,img)

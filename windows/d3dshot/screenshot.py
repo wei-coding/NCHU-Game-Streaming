@@ -63,7 +63,7 @@ def background_screenshot(hwnd):
     return im
 class gpu_screenshots():
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy')
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=5)
     def shot(self):
         self.d.capture()
     def get_frames(self):
