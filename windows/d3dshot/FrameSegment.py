@@ -4,6 +4,7 @@ import cv2
 import struct
 import socket
 import math
+import UDPframe
 class FrameSegment(threading.Thread):
     """
     Object to break down image frame segment
@@ -11,6 +12,7 @@ class FrameSegment(threading.Thread):
     """
     MAX_DGRAM = 2**16
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
+    ENCODE_PARAM = [int(cv2.IMWRITE_JPEG_QUALITY), 70]
 
     def __init__(self, sock, port, addr="192.168.56.101"):
         threading.Thread.__init__(self)
@@ -18,7 +20,8 @@ class FrameSegment(threading.Thread):
         self.port = port
         self.addr = addr
         self.buffer = []
-        self.go = True 
+        self.go = True
+        self.start_time = time.time_ns()
     def run(self):
         """
         Compress image and Break down
@@ -27,7 +30,7 @@ class FrameSegment(threading.Thread):
         while(self.go):
             if(len(self.buffer) != 0):
                 img = self.buffer.pop()
-                compress_img = cv2.imencode('.jpg', img)[1]
+                _ ,compress_img = cv2.imencode('.jpg', img, self.ENCODE_PARAM)
                 dat = compress_img.tostring()
                 size = len(dat)
                 count = math.ceil(size/(self.MAX_IMAGE_DGRAM))
@@ -45,3 +48,5 @@ class FrameSegment(threading.Thread):
                 time.sleep(0.1)
     def add_buffer(self,img):
         self.buffer.insert(0,img)
+    def stop(self):
+        self.go = False

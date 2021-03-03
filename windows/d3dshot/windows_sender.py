@@ -16,28 +16,23 @@ def main():
     port = 12345
     fs = FrameSegment(s, port)
     fs.start()
-    #fm = FpsMeter(interval=5)
-    #fm.start()
+    fm = FpsMeter(interval=5)
+    fm.start()
     ss = screenshot.gpu_screenshots()
     ss.shot()
     try:
         while conti:
             img = ss.get_frames()
             while img is None:
-            #img = screenshot.background_screenshot(hwnd)
                 img = ss.get_frames()
-            #img = Image.frombytes('RGB',sct_img.size,sct_img.bgra,'raw','BGRX')
-            #print(img)
-            img = cv2.cvtColor(np.asarray(img),cv2.COLOR_RGB2BGR)
+            img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
             fs.add_buffer(img)
-            #fm.inc_count()
-            #print('successed')
+            fm.inc_count()
     except KeyboardInterrupt:
         conti = False
         ss.stop()
         fm.stop()
         fs.stop()
-    #print('screenshot successed.')
         
     s.close()
 if __name__ == "__main__":

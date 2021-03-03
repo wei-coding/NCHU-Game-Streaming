@@ -17,3 +17,5 @@ class FpsMeter(threading.Thread):
         self.count += 1
     def get_fps(self) -> float:
         return self.fps
+    def stop(self):
+        self.go = False
