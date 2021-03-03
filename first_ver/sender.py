@@ -8,7 +8,7 @@ import struct
 import math
 import time
 import threading
-import pyautogui as pg
+#import pyautogui as pg
 from mss import mss
 from PIL import Image
 
@@ -21,13 +21,14 @@ class FrameSegment(threading.Thread):
     MAX_DGRAM = 2**16
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
 
-    def __init__(self, sock, port, addr="10.0.2.15"):
+    def __init__(self, sock, port, addr="192.168.56.101"):
         threading.Thread.__init__(self)
         self.s = sock
         self.port = port
         self.addr = addr
         self.buffer = []
         self.flag = True
+        self.die = False
 
     def run(self):
         """
@@ -58,13 +59,17 @@ class FrameSegment(threading.Thread):
         print(len(self.buffer))
         if(len(self.buffer) >= 10):
             time.sleep(0.1)
+    def join(self):
+        self.die = True
+        super().join()
 class ScreenShot(threading.Thread):
-    def __init__(self,fs_,w_=500,h_=500):
+    def __init__(self,fs_,w_=1920,h_=1080):
         threading.Thread.__init__(self)
         self.w = w_
         self.h = h_
         self.sct = mss()
         self.fs = fs_
+        self.die = False
     def run(self):
         mon = {'top':0,'left':0,'width':self.w,'height':self.h}
         while(True):
@@ -72,6 +77,9 @@ class ScreenShot(threading.Thread):
             img = Image.frombytes('RGB',sct_img.size,sct_img.bgra,'raw','BGRX')
             img = cv2.cvtColor(np.asarray(img),cv2.COLOR_RGB2BGR)
             self.fs.add_buffer(img)
+    def join(self):
+        self.die = True
+        super().join()
 def main():
     """ Top level main function """
     # Set up UDP socket
@@ -88,12 +96,16 @@ def main():
     cv2.destroyAllWindows()
     s.close()
     '''
-    (w,h) = pg.size()
+    #(w,h) = pg.size()
     ss = ScreenShot(fs)
     fs.start()
     ss.start()
-    fs.join()
-    ss.join()
+    try:
+        while True:
+            time.sleep(2)
+    except KeyboardInterrupt:
+        fs.join()
+        ss.join()
     s.close()
 
 

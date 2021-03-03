@@ -63,11 +63,13 @@ def background_screenshot(hwnd):
     return im
 class gpu_screenshots():
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=5)
+        self.d = d3dshot.create(capture_output='pil', frame_buffer_size=5)
     def shot(self):
         self.d.capture()
     def get_frames(self):
         return self.d.get_latest_frame()
+    def stop(self):
+        self.d.stop()
 
 if __name__ == '__main__':
     hwnd = win32gui.FindWindow(None, '控制台')

@@ -12,7 +12,7 @@ class FrameSegment(threading.Thread):
     MAX_DGRAM = 2**16
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
 
-    def __init__(self, sock, port, addr="127.0.0.1"):
+    def __init__(self, sock, port, addr="192.168.56.101"):
         threading.Thread.__init__(self)
         self.s = sock
         self.port = port
@@ -27,7 +27,7 @@ class FrameSegment(threading.Thread):
         while(self.go):
             if(len(self.buffer) != 0):
                 img = self.buffer.pop()
-                compress_img = cv2.imencode('.png', img)[1]
+                compress_img = cv2.imencode('.jpg', img)[1]
                 dat = compress_img.tostring()
                 size = len(dat)
                 count = math.ceil(size/(self.MAX_IMAGE_DGRAM))
