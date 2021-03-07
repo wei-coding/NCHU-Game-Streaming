@@ -5,16 +5,18 @@ import cv2
 import numpy as np
 import socket
 import struct
-from rtp_packet import *
+from Protocol import *
 
-MAX_DGRAM = 2**16
+MAX_DGRAM = 65546
+datagram_builder = DatagramBuilder()
 
 def dump_buffer(s):
     """ Emptying buffer frame """
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        print(seg.get_packet_header())
-        if seg.get_packet_header()[] == 1:
+        (seq,last,timestamp,payload,end) = datagram_builder.unpack(seg)
+        print(last)
+        if last:
             print("finish emptying buffer")
             break
 
@@ -24,16 +26,17 @@ def main():
     
     # Set up socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.bind(('192.168.0.103', 12345))
+    s.bind(('192.168.56.101', 12345))
     dat = b''
     dump_buffer(s)
 
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        if struct.unpack("B", seg[0:1])[0] > 1:
-            dat += seg[1:]
+        (seq,last,timestamp,payload,end) = datagram_builder.unpack(seg)
+        if not last:
+            dat += payload
         else:
-            dat += seg[1:]
+            dat += payload
             img = cv2.imdecode(np.fromstring(dat, dtype=np.uint8), 1)
             cv2.imshow('frame', img)
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -45,4 +48,5 @@ def main():
     s.close()
 
 if __name__ == "__main__":
+    
     main()

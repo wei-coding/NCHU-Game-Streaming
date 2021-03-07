@@ -11,7 +11,8 @@ import threading
 #import pyautogui as pg
 from mss import mss
 from PIL import Image
-from rtp_packet import *
+from Protocol import *
+
 
 class FrameSegment(threading.Thread):
     """
@@ -29,6 +30,8 @@ class FrameSegment(threading.Thread):
         self.buffer = []
         self.flag = True
         self.die = False
+        self.datagram_builder = DatagramBuilder()
+        self.seq = -1
 
     def run(self):
         """
@@ -36,6 +39,8 @@ class FrameSegment(threading.Thread):
         into data segments
         """
         while(self.flag):
+            self.seq += 1
+            self.seq %= 1024
             if(len(self.buffer) != 0):
                 img = self.buffer.pop()
                 compress_img = cv2.imencode('.jpg', img)[1]
@@ -45,8 +50,9 @@ class FrameSegment(threading.Thread):
                 array_pos_start = 0
                 while count:
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    packet = RTPPacket(26,count,time.time_ns(),dat[array_pos_start:array_pos_end])
-                    self.s.sendto(packet,
+                    send_data = self.datagram_builder.build(self.seq,True if count == 1 else False,time.time_ns(),dat[array_pos_start:array_pos_end])
+                    #print(send_data)
+                    self.s.sendto(send_data,
                         (self.addr, self.port)
                         )
                     array_pos_start = array_pos_end
@@ -87,15 +93,6 @@ def main():
     port = 12345
 
     fs = FrameSegment(s, port)
-
-    '''cap = cv2.VideoCapture(2)
-    while (cap.isOpened()):
-        _, frame = cap.read()
-        fs.udp_frame(frame)
-    cap.release()
-    cv2.destroyAllWindows()
-    s.close()
-    '''
     #(w,h) = pg.size()
     ss = ScreenShot(fs)
     fs.start()
@@ -104,8 +101,7 @@ def main():
         while True:
             time.sleep(2)
     except KeyboardInterrupt:
-        fs.join()
-        ss.join()
+        raise Exception
     s.close()
 
 
