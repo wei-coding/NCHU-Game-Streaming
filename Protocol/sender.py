@@ -19,17 +19,16 @@ class FrameSegment(threading.Thread):
     Object to break down image frame segment
     if the size of image exceed maximum datagram size
     """
-    MAX_DGRAM = 2**16
+    MAX_DGRAM = 2**16 - 64
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
 
-    def __init__(self, sock, port, addr="192.168.56.101"):
+    def __init__(self, sock, port, addr="192.168.56.102"):
         threading.Thread.__init__(self)
         self.s = sock
         self.port = port
         self.addr = addr
         self.buffer = []
-        self.flag = True
-        self.die = False
+        self.signal = True
         self.datagram_builder = DatagramBuilder()
         self.seq = -1
 
@@ -38,19 +37,19 @@ class FrameSegment(threading.Thread):
         Compress image and Break down
         into data segments
         """
-        while(self.flag):
-            self.seq += 1
-            self.seq %= 1024
+        while self.signal:
             if(len(self.buffer) != 0):
                 img = self.buffer.pop()
                 compress_img = cv2.imencode('.jpg', img)[1]
-                dat = compress_img.tostring()
+                dat = compress_img.tobytes()
                 size = len(dat)
                 count = math.ceil(size/(self.MAX_IMAGE_DGRAM))
                 array_pos_start = 0
                 while count:
+                    self.seq += 1
+                    self.seq %= 1024
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    send_data = self.datagram_builder.build(self.seq,True if count == 1 else False,time.time_ns(),dat[array_pos_start:array_pos_end])
+                    send_data = self.datagram_builder.pack(self.seq,True if count == 1 else False,time.time_ns()//10000000,dat[array_pos_start:array_pos_end])
                     #print(send_data)
                     self.s.sendto(send_data,
                         (self.addr, self.port)
@@ -65,9 +64,8 @@ class FrameSegment(threading.Thread):
         print(len(self.buffer))
         if(len(self.buffer) >= 10):
             time.sleep(0.1)
-    def join(self):
-        self.die = True
-        super().join()
+    def stop(self):
+        self.signal = False
 class ScreenShot(threading.Thread):
     def __init__(self,fs_,w_=1920,h_=1080):
         threading.Thread.__init__(self)
@@ -75,17 +73,16 @@ class ScreenShot(threading.Thread):
         self.h = h_
         self.sct = mss()
         self.fs = fs_
-        self.die = False
+        self.signal = True
     def run(self):
         mon = {'top':0,'left':0,'width':self.w,'height':self.h}
-        while(True):
+        while self.signal:
             sct_img = self.sct.grab(mon)
             img = Image.frombytes('RGB',sct_img.size,sct_img.bgra,'raw','BGRX')
             img = cv2.cvtColor(np.asarray(img),cv2.COLOR_RGB2BGR)
             self.fs.add_buffer(img)
-    def join(self):
-        self.die = True
-        super().join()
+    def stop(self):
+        self.signal = False
 def main():
     """ Top level main function """
     # Set up UDP socket
@@ -95,13 +92,14 @@ def main():
     fs = FrameSegment(s, port)
     #(w,h) = pg.size()
     ss = ScreenShot(fs)
-    fs.start()
     ss.start()
+    fs.start()
     try:
         while True:
             time.sleep(2)
     except KeyboardInterrupt:
-        raise Exception
+        fs.stop()
+        ss.stop()
     s.close()
 
 

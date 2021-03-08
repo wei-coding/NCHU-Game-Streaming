@@ -6,15 +6,18 @@ import numpy as np
 import socket
 import struct
 from Protocol import *
+import threading
 
 MAX_DGRAM = 65546
 datagram_builder = DatagramBuilder()
+
+img_buffer = []
 
 def dump_buffer(s):
     """ Emptying buffer frame """
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        (seq,last,timestamp,payload,end) = datagram_builder.unpack(seg)
+        (seq,last,timestamp,payload) = datagram_builder.unpack(seg)
         print(last)
         if last:
             print("finish emptying buffer")
@@ -26,27 +29,35 @@ def main():
     
     # Set up socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.bind(('192.168.56.101', 12345))
+    s.bind(('192.168.56.102', 12345))
     dat = b''
     dump_buffer(s)
 
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        (seq,last,timestamp,payload,end) = datagram_builder.unpack(seg)
+        (seq,last,timestamp,payload) = datagram_builder.unpack(seg)
+        #print(seq,last,timestamp,payload)
         if not last:
             dat += payload
         else:
             dat += payload
             img = cv2.imdecode(np.fromstring(dat, dtype=np.uint8), 1)
-            cv2.imshow('frame', img)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            img_buffer.append(img)
             dat = b''
 
     # cap.release()
     cv2.destroyAllWindows()
     s.close()
-
+def show_img():
+    while True:
+        if(len(img_buffer)):
+            img = img_buffer.pop(0)
+            if img is not None:
+                cv2.imshow('frame',img)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
 if __name__ == "__main__":
-    
-    main()
+    main_thread = threading.Thread(target=main)
+    show_thread = threading.Thread(target=show_img)
+    main_thread.start()
+    show_thread.start()
