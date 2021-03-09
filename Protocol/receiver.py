@@ -7,8 +7,9 @@ import socket
 import struct
 from Protocol import *
 import threading
+import time
 
-MAX_DGRAM = 65546
+MAX_DGRAM = 2**16
 datagram_builder = DatagramBuilder()
 
 img_buffer = []
@@ -17,8 +18,8 @@ def dump_buffer(s):
     """ Emptying buffer frame """
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        (seq,last,timestamp,payload) = datagram_builder.unpack(seg)
-        print(last)
+        (seq,last,timestamp) = datagram_builder.unpack(seg)
+        #print(last)
         if last:
             print("finish emptying buffer")
             break
@@ -35,14 +36,22 @@ def main():
 
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        (seq,last,timestamp,payload) = datagram_builder.unpack(seg)
+        (seq,last,timestamp) = datagram_builder.unpack(seg)
+        payload = seg[struct.calcsize('!I?I'):]
         #print(seq,last,timestamp,payload)
         if not last:
             dat += payload
         else:
             dat += payload
             img = cv2.imdecode(np.fromstring(dat, dtype=np.uint8), 1)
-            img_buffer.append(img)
+            if img is not None:
+                now = time.time()
+                dif = timestamp - int(now - int(now))
+                print(dif)
+                if dif < 500000:
+                    cv2.imshow('frame', img)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
             dat = b''
 
     # cap.release()
@@ -58,6 +67,6 @@ def show_img():
                     break
 if __name__ == "__main__":
     main_thread = threading.Thread(target=main)
-    show_thread = threading.Thread(target=show_img)
+    #show_thread = threading.Thread(target=show_img)
     main_thread.start()
-    show_thread.start()
+    #show_thread.start()
