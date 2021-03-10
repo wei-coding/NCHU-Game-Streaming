@@ -7,8 +7,8 @@ app = Flask(__name__)
 screen = scnshot.gpu_screenshots()
 screen.shot()
 
-ENCODE_PARAM_JPEG = [int(cv2.IMWRITE_JPEG_QUALITY),80,int(cv2.IMWRITE_JPEG_OPTIMIZE),0]
-ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 60]
+ENCODE_PARAM_JPEG = [int(cv2.IMWRITE_JPEG_QUALITY),80,int(cv2.IMWRITE_JPEG_OPTIMIZE),1]
+ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 80]
 ENCODE_PARAM_PNG = [int(cv2.IMWRITE_PNG_COMPRESSION), 7]
 signal = True
 
@@ -34,4 +34,4 @@ def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

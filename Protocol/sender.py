@@ -24,7 +24,7 @@ class FrameSegment(threading.Thread):
     ENCODE_PARAM_JPEG = [int(cv2.IMWRITE_JPEG_QUALITY),60,int(cv2.IMWRITE_JPEG_PROGRESSIVE),0,int(cv2.IMWRITE_JPEG_OPTIMIZE),1]
     ENCODE_PARAM_PNG = [int(cv2.IMWRITE_PNG_COMPRESSION), 7]
     ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 101]
-    def __init__(self, sock, port, addr="192.168.56.102"):
+    def __init__(self, sock, port, addr="192.168.0.103"):
         threading.Thread.__init__(self)
         self.s = sock
         self.port = port
