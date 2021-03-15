@@ -27,6 +27,7 @@ class FrameSegment(threading.Thread):
     ENCODE_PARAM_PNG = [int(cv2.IMWRITE_PNG_COMPRESSION), 7]
     ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 101]
     JPEG = turbojpeg.TurboJPEG()
+
     def __init__(self, sock, port, addr="127.0.0.1"):
         threading.Thread.__init__(self)
         self.s = sock
@@ -38,6 +39,7 @@ class FrameSegment(threading.Thread):
         self.seq = -1
 
         self.scn.start()
+
     def run(self):
         """
         Compress image and Break down
@@ -67,19 +69,27 @@ class FrameSegment(threading.Thread):
             else:
                 #print("Sleeping...")
                 time.sleep(0.01)
+
     def stop(self):
         self.signal = False
+
+
 class gpu_screenshots():
     def __init__(self):
         self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=2)
+
     def start(self):
         self.d.capture()
+
     def get_latest_frame(self):
         r = self.d.get_latest_frame()
         r = cv2.cvtColor(r, cv2.COLOR_BGR2RGB) if r is not None else None
         return True if r is not None else False, r
+
     def stop(self):
         self.d.stop()
+
+        
 def main():
     """ Top level main function """
     # Set up UDP socket
