@@ -13,6 +13,7 @@ from mss import mss
 from PIL import Image
 from Protocol import *
 import d3dshot
+import turbojpeg
 
 
 class FrameSegment(threading.Thread):
@@ -25,6 +26,7 @@ class FrameSegment(threading.Thread):
     ENCODE_PARAM_JPEG = [int(cv2.IMWRITE_JPEG_QUALITY),50,int(cv2.IMWRITE_JPEG_PROGRESSIVE),0,int(cv2.IMWRITE_JPEG_OPTIMIZE),0]
     ENCODE_PARAM_PNG = [int(cv2.IMWRITE_PNG_COMPRESSION), 7]
     ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 101]
+    JPEG = turbojpeg.TurboJPEG()
     def __init__(self, sock, port, addr="127.0.0.1"):
         threading.Thread.__init__(self)
         self.s = sock
@@ -47,6 +49,7 @@ class FrameSegment(threading.Thread):
                 #img = self.buffer.pop()
                 compress_img = cv2.imencode('.jpg', img, self.ENCODE_PARAM_JPEG)[1]
                 dat = compress_img.tobytes()
+                #dat = self.JPEG.encode(img,quality=60)
                 size = len(dat)
                 count = math.ceil(size/(self.MAX_IMAGE_DGRAM))
                 array_pos_start = 0

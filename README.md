@@ -29,3 +29,21 @@
 
 + 2/22 找到最高效的截圖方法(d3dshot)
 + 2/23 截圖成功，fps達近60，準備進入協定部分
+
+#### 三月
+
+* 建置opencv libjpeg-turbo環境，速度上很快了
+* 但可以繼續嘗試直接接上TurboJPEG，速度會更快
+* 接下來目標看要用RTP、web版還是UDP自作協定版本
+
+
+
+
+
+## 參考資料
+
+[Video I/O Part 2: Fast JPEG Decoding – loopbio blog](http://blog.loopbio.com/video-io-2-jpeg-decoding.html)
+
+[Speed-Up JPEG Encode/Decode Processing for OpenCV using libjpeg-turbo – Summary?Blog (unanancyowen.com)](http://unanancyowen.com/en/opencv-with-libjpeg-turbo/)
+
+[OpenCV: Install OpenCV-Python in Windows](https://docs.opencv.org/master/d5/de5/tutorial_py_setup_in_windows.html)
