@@ -1,29 +1,36 @@
 from flask import Flask, render_template, Response, request
 import cv2
-import screenshot as scnshot
+import screenshot as scn
+import av
 
 app = Flask(__name__)
 
-screen = scnshot.gpu_screenshots()
-screen.shot()
+screen = scn.gpu_screenshots()
+screen.start()
 
-ENCODE_PARAM_JPEG = [int(cv2.IMWRITE_JPEG_QUALITY),80,int(cv2.IMWRITE_JPEG_OPTIMIZE),1]
-ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 80]
-ENCODE_PARAM_PNG = [int(cv2.IMWRITE_PNG_COMPRESSION), 7]
+JPEG_ARGUM = [int(cv2.IMWRITE_JPEG_QUALITY), 95, int(cv2.IMWRITE_JPEG_OPTIMIZE), 0]
+
 signal = True
+
+output = av.open('.mp4', 'w')
+stream = output.add_stream('h264', '23.976')
+stream.bit_rate = 8000000
 
 def gen_frames():
     global signal
     while signal:
-        success, frame = screen.get_frames()  # read the camera frame
+        success, frame = screen.get_latest_frame()  # read the camera frame
         if not success:
             break
         else:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            ret, buffer = cv2.imencode('.jpg', frame, ENCODE_PARAM_JPEG)
+            #frame = av.VideoFrame.from_ndarray(frame, format='bgr24')
+            ret, buffer = cv2.imencode('.jpg', frame, JPEG_ARGUM)
+            #frame = jpeg.encode(frame, pixel_format=TJPF_BGR)
             frame = buffer.tobytes()
+            #frame = stream.encode(frame)
+            
             yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+                b'Content-Type: video/h264\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
 
 @app.route('/')
 def index():

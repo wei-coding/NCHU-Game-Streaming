@@ -4,7 +4,7 @@ class gpu_screenshots():
         self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=5)
     def shot(self):
         self.d.capture()
-    def get_frames(self):
+    def get_frame(self):
         r = self.d.get_latest_frame()
         return True if r is not None else False, r
     def stop(self):

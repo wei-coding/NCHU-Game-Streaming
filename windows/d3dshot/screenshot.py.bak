@@ -8,6 +8,7 @@ from PIL import Image
 import time
 import d3dshot
 
+
 count = 0
 
 def get_window_rect(hwnd):
@@ -61,13 +62,16 @@ def background_screenshot(hwnd):
         count += 1
     '''
     return im
+import d3dshot
+import cv2
 class gpu_screenshots():
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=20)
-    def shot(self):
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=5)
+    def start(self):
         self.d.capture()
-    def get_frames(self):
+    def get_latest_frame(self):
         r = self.d.get_latest_frame()
+        r = cv2.cvtColor(r, cv2.COLOR_BGR2RGB)
         return True if r is not None else False, r
     def stop(self):
         self.d.stop()
@@ -77,3 +81,4 @@ if __name__ == '__main__':
     for _ in range(20):
         background_screenshot(hwnd)
         time.sleep(0.5)
+
