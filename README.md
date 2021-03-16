@@ -35,16 +35,17 @@
 * 建置opencv libjpeg-turbo環境，速度上很快了
 * 但可以繼續嘗試直接接上TurboJPEG，速度會更快
 * 接下來目標看要用RTP、web版還是UDP自作協定版本
-* 目前測試自製UDP比較快，web比較穩
+* 目前測試自製UDP比較快(延遲小)，web比較穩(不會掉包)
+* 直接上libjpeg-turbo並配合UDP速度上十分不錯
 
+## 安裝說明
 
+* 見requirements.txt
+* 外部安裝
+  * [libjpeg-turbo](https://sourceforge.net/projects/libjpeg-turbo/files/2.0.90%20%282.1%20beta1%29/)
 
 
 
 ## 參考資料
 
-[Video I/O Part 2: Fast JPEG Decoding – loopbio blog](http://blog.loopbio.com/video-io-2-jpeg-decoding.html)
-
 [Speed-Up JPEG Encode/Decode Processing for OpenCV using libjpeg-turbo – Summary?Blog (unanancyowen.com)](http://unanancyowen.com/en/opencv-with-libjpeg-turbo/)
-
-[OpenCV: Install OpenCV-Python in Windows](https://docs.opencv.org/master/d5/de5/tutorial_py_setup_in_windows.html)
