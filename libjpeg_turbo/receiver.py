@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
 from __future__ import division
-import cv2
-import numpy as np
+
 import socket
-import struct
-from Protocol import *
 import threading
-import time
+
+import cv2
 import turbojpeg
 
-MAX_DGRAM = 2**16
+from Protocol import *
+
+MAX_DGRAM = 2 ** 16
 datagram_builder = DatagramBuilder()
 jpeg = turbojpeg.TurboJPEG()
 img_buffer = []
@@ -21,7 +21,7 @@ def dump_buffer(s):
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
         (seq, last, timestamp) = datagram_builder.unpack(seg)
-        #print(last)
+        # print(last)
         if last:
             print("finish emptying buffer")
             break
@@ -30,7 +30,7 @@ def dump_buffer(s):
 def main():
     """ Getting image udp frame &
     concate before decode and output image """
-    
+
     # Set up socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.bind(('127.0.0.1', 12345))
@@ -41,12 +41,12 @@ def main():
         seg, addr = s.recvfrom(MAX_DGRAM)
         (seq, last, timestamp) = datagram_builder.unpack(seg)
         payload = seg[struct.calcsize('!I?I'):]
-        #print(seq,last,timestamp,payload)
+        # print(seq,last,timestamp,payload)
         if not last:
             dat += payload
         else:
             dat += payload
-            #img = cv2.imdecode(np.fromstring(dat, dtype=np.uint8), 1)
+            # img = cv2.imdecode(np.fromstring(dat, dtype=np.uint8), 1)
             img = jpeg.decode(dat)
             if img is not None:
                 cv2.imshow('frame', img)
@@ -64,13 +64,13 @@ def show_img():
         if len(img_buffer):
             img = img_buffer.pop(0)
             if img is not None:
-                cv2.imshow('frame',img)
+                cv2.imshow('frame', img)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
 
 if __name__ == "__main__":
     main_thread = threading.Thread(target=main)
-    #show_thread = threading.Thread(target=show_img)
+    # show_thread = threading.Thread(target=show_img)
     main_thread.start()
-    #show_thread.start()
+    # show_thread.start()

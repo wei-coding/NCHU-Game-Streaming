@@ -35,6 +35,7 @@
 * 建置opencv libjpeg-turbo環境，速度上很快了
 * 但可以繼續嘗試直接接上TurboJPEG，速度會更快
 * 接下來目標看要用RTP、web版還是UDP自作協定版本
+* 目前測試自製UDP比較快，web比較穩
 
 
 

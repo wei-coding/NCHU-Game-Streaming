@@ -1,19 +1,15 @@
 #!/usr/bin/env python
-
-from __future__ import division
-import cv2
-import numpy as np
-import socket
-import struct
 import math
-import time
+import socket
 import threading
-#import pyautogui as pg
-from mss import mss
-from PIL import Image
-from Protocol import *
+import time
+
+import cv2
 import d3dshot
 import turbojpeg
+
+# import pyautogui as pg
+from Protocol import *
 
 
 class FrameSegment(threading.Thread):
@@ -21,9 +17,10 @@ class FrameSegment(threading.Thread):
     Object to break down image frame segment
     if the size of image exceed maximum datagram size
     """
-    MAX_DGRAM = 2**16 - 64
+    MAX_DGRAM = 2 ** 16 - 64
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
-    ENCODE_PARAM_JPEG = [int(cv2.IMWRITE_JPEG_QUALITY),50,int(cv2.IMWRITE_JPEG_PROGRESSIVE),0,int(cv2.IMWRITE_JPEG_OPTIMIZE),0]
+    ENCODE_PARAM_JPEG = [int(cv2.IMWRITE_JPEG_QUALITY), 50, int(cv2.IMWRITE_JPEG_PROGRESSIVE), 0,
+                         int(cv2.IMWRITE_JPEG_OPTIMIZE), 0]
     ENCODE_PARAM_PNG = [int(cv2.IMWRITE_PNG_COMPRESSION), 7]
     ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 101]
     JPEG = turbojpeg.TurboJPEG()
@@ -47,13 +44,12 @@ class FrameSegment(threading.Thread):
         """
         while self.signal:
             img = self.scn.get_latest_frame()[1]
-            if(img is not None):
-                #img = self.buffer.pop()
-                compress_img = cv2.imencode('.jpg', img, self.ENCODE_PARAM_JPEG)[1]
-                dat = compress_img.tobytes()
-                #dat = self.JPEG.encode(img,quality=60)
+            if (img is not None):
+                # compress_img = cv2.imencode('.jpg', img, self.ENCODE_PARAM_JPEG)[1]
+                # dat = compress_img.tobytes()
+                dat = self.JPEG.encode(img, quality=60)
                 size = len(dat)
-                count = math.ceil(size/(self.MAX_IMAGE_DGRAM))
+                count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
                 raw_data = b''
                 while count:
@@ -61,13 +57,15 @@ class FrameSegment(threading.Thread):
                     self.seq %= 1024
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
                     now = time.time()
-                    send_data = self.datagram_builder.pack(self.seq,True if count == 1 else False,int((now - int(now)) * 1000000)) + dat[array_pos_start:array_pos_end]
+                    send_data = self.datagram_builder.pack(self.seq, True if count == 1 else False,
+                                                           int((now - int(now)) * 1000000)) + dat[
+                                                                                              array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
-                    #time.sleep(10)
+                    # time.sleep(10)
             else:
-                #print("Sleeping...")
+                # print("Sleeping...")
                 time.sleep(0.01)
 
     def stop(self):
@@ -76,7 +74,7 @@ class FrameSegment(threading.Thread):
 
 class gpu_screenshots():
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=2)
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=1)
 
     def start(self):
         self.d.capture()
@@ -89,7 +87,7 @@ class gpu_screenshots():
     def stop(self):
         self.d.stop()
 
-        
+
 def main():
     """ Top level main function """
     # Set up UDP socket
@@ -97,7 +95,7 @@ def main():
     port = 12345
 
     fs = FrameSegment(s, port)
-    #(w,h) = pg.size()
+    # (w,h) = pg.size()
     fs.start()
     try:
         while True:
