@@ -1,10 +1,5 @@
 #!/usr/bin/env python
-
-from __future__ import division
-
 import socket
-import threading
-
 import cv2
 import turbojpeg
 
@@ -14,6 +9,8 @@ MAX_DGRAM = 2 ** 16
 datagram_builder = DatagramBuilder('!I?')
 jpeg = turbojpeg.TurboJPEG()
 img_buffer = []
+server_ip = '192.168.0.101'
+port = 12345
 
 
 def dump_buffer(s):
@@ -33,12 +30,15 @@ def main():
 
     # Set up socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.bind(('127.0.0.1', 12345))
+    # s.bind(('0.0.0.0', 12345))
+    send = s.sendto(b'', (server_ip, port))
+    previous_img = None
     dat = b''
     dump_buffer(s)
     now_seq = 0
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
+        # print('Got packet.')
         (seq, last) = datagram_builder.unpack(seg)
         payload = seg[datagram_builder.packsize:]
         # print(seq,last,timestamp,payload)
@@ -47,9 +47,15 @@ def main():
         else:
             dat += payload
             # img = cv2.imdecode(np.fromstring(dat, dtype=np.uint8), 1)
-            img = jpeg.decode(dat)
+            try:
+                img = jpeg.decode(dat)
+            except Exception:
+                pass
             if img is not None:
                 cv2.imshow('frame', img)
+                previous_img = img
+            else:
+                cv2.imshow('frame', previous_img)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
             dat = b''
@@ -60,5 +66,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main_thread = threading.Thread(target=main)
-    main_thread.start()
+    main()
