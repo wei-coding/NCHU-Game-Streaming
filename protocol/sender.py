@@ -11,7 +11,7 @@ import threading
 #import pyautogui as pg
 from mss import mss
 from PIL import Image
-from Protocol import *
+from protocol import *
 import d3dshot
 
 

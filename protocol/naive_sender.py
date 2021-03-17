@@ -1,5 +1,5 @@
 import socket
-import Protocol
+import protocol
 import time
 
 MAX_DGRAM = 2**16
@@ -9,7 +9,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 addr = '192.168.56.101'
 port = 12345
 
-p = Protocol.DatagramBuilder()
+p = protocol.DatagramBuilder()
 
 message = b'15613864965'
 seq = 0

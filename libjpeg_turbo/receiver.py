@@ -1,9 +1,8 @@
-#!/usr/bin/env python
 import socket
 import cv2
 import turbojpeg
 
-from Protocol import *
+from protocol import *
 
 MAX_DGRAM = 2 ** 16
 datagram_builder = DatagramBuilder('!I?')

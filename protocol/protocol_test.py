@@ -1,8 +1,8 @@
-import Protocol
+import protocol
 import struct
 import time
 import ctypes
-d = Protocol.Datagram()
+d = protocol.Datagram()
 d.seq = 0
 d.last = True
 d.timestamp = time.time_ns()
