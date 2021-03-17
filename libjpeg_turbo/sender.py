@@ -24,16 +24,15 @@ class FrameSegment(threading.Thread):
     # ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 101]
     JPEG = turbojpeg.TurboJPEG()
 
-    def __init__(self, sock, port, addr="127.0.0.1"):
+    def __init__(self, sock, addr, port):
         threading.Thread.__init__(self)
         self.s = sock
-        self.port = port
-        self.addr = addr
         self.scn = gpu_screenshots()
         self.signal = True
         self.datagram_builder = DatagramBuilder('!I?')
         self.seq = -1
-
+        self.addr = addr
+        self.port = port
         self.scn.start()
 
     def run(self):
@@ -68,11 +67,12 @@ class FrameSegment(threading.Thread):
 
     def stop(self):
         self.signal = False
+        self.scn.stop()
 
 
 class gpu_screenshots():
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=1)
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=3)
 
     def start(self):
         self.d.capture()
@@ -91,8 +91,13 @@ def main():
     # Set up UDP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     port = 12345
+    s.bind(('',port))
 
-    fs = FrameSegment(s, port)
+    revcData, (remoteHost, remotePort) = s.recvfrom(1024)
+    while revcData is None:
+        revcData, (remoteHost, remotePort) = s.recvfrom(1024)
+
+    fs = FrameSegment(s, remoteHost, remotePort)
     # (w,h) = pg.size()
     fs.start()
     try:
