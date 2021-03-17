@@ -31,7 +31,7 @@ class FrameSegment(threading.Thread):
         self.addr = addr
         self.scn = gpu_screenshots()
         self.signal = True
-        self.datagram_builder = DatagramBuilder()
+        self.datagram_builder = DatagramBuilder('!I?')
         self.seq = -1
 
         self.scn.start()
@@ -43,7 +43,7 @@ class FrameSegment(threading.Thread):
         """
         while self.signal:
             img = self.scn.get_latest_frame()[1]
-            if (img is not None):
+            if img is not None:
                 # compress_img = cv2.imencode('.jpg', img, self.ENCODE_PARAM_JPEG)[1]
                 # dat = compress_img.tobytes()
                 dat = self.JPEG.encode(img, quality=60)
@@ -56,9 +56,8 @@ class FrameSegment(threading.Thread):
                     self.seq %= 1024
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
                     now = time.time()
-                    send_data = self.datagram_builder.pack(self.seq, True if count == 1 else False,
-                                                           int((now - int(now)) * 1000000)) + dat[
-                                                                                              array_pos_start:array_pos_end]
+                    send_data = self.datagram_builder.pack(self.seq,
+                                                           True if count == 1 else False) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
