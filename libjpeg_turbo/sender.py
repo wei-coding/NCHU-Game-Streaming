@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import math
 import socket
 import threading
@@ -19,10 +18,10 @@ class FrameSegment(threading.Thread):
     """
     MAX_DGRAM = 2 ** 16 - 64
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
-    ENCODE_PARAM_JPEG = [int(cv2.IMWRITE_JPEG_QUALITY), 50, int(cv2.IMWRITE_JPEG_PROGRESSIVE), 0,
-                         int(cv2.IMWRITE_JPEG_OPTIMIZE), 0]
-    ENCODE_PARAM_PNG = [int(cv2.IMWRITE_PNG_COMPRESSION), 7]
-    ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 101]
+    # ENCODE_PARAM_JPEG = [int(cv2.IMWRITE_JPEG_QUALITY), 50, int(cv2.IMWRITE_JPEG_PROGRESSIVE), 0,
+    #                     int(cv2.IMWRITE_JPEG_OPTIMIZE), 0]
+    # ENCODE_PARAM_PNG = [int(cv2.IMWRITE_PNG_COMPRESSION), 7]
+    # ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 101]
     JPEG = turbojpeg.TurboJPEG()
 
     def __init__(self, sock, port, addr="127.0.0.1"):
