@@ -9,7 +9,7 @@ MAX_DGRAM = 2 ** 16
 datagram_builder = DatagramBuilder('!I?')
 jpeg = turbojpeg.TurboJPEG()
 img_buffer = []
-server_ip = '192.168.0.101'
+server_ip = '127.0.0.1'
 port = 12345
 
 
@@ -30,9 +30,14 @@ def main():
 
     # Set up socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # s.bind(('0.0.0.0', 12345))
-    send = s.sendto(b'', (server_ip, port))
+    recv = None
+    addr = None
+    while recv != b'A':
+        s.sendto(b'R', (server_ip, port))
+        recv, addr = s.recvfrom(1024)
+    s.sendto(b'A', (server_ip, port))
     previous_img = None
+    img = None
     dat = b''
     dump_buffer(s)
     now_seq = 0

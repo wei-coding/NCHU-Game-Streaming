@@ -2,7 +2,6 @@ import math
 import socket
 import threading
 import time
-
 import cv2
 import d3dshot
 import turbojpeg
@@ -86,19 +85,56 @@ class gpu_screenshots():
         self.d.stop()
 
 
+class StartServer(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.s = None
+        self.fs = None
+        self.signal = True
+        self.remoteHost = None
+        self.remotePort = None
+
+    def run(self):
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        port = 12345
+        self.s.bind(('', port))
+
+        revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
+        while revcData != b'R':
+            revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
+        self.s.sendto(b'A', (self.remoteHost, self.remotePort))
+        revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
+        while revcData != b'A':
+            revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
+        self.fs = FrameSegment(self.s, self.remoteHost, self.remotePort)
+        self.fs.start()
+        while self.signal:
+            time.sleep(2)
+        self.fs.stop()
+        self.s.close()
+
+    def stop(self):
+        self.signal = False
+
+    def get_addr(self):
+        return self.remoteHost
+
+
 def main():
     """ Top level main function """
     # Set up UDP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     port = 12345
-    s.bind(('',port))
+    s.bind(('', port))
 
     revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    while revcData is None:
+    while revcData != b'R':
         revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-
+    s.sendto(b'A', (remoteHost, remotePort))
+    revcData, (remoteHost, remotePort) = s.recvfrom(1024)
+    while revcData != b'A':
+        revcData, (remoteHost, remotePort) = s.recvfrom(1024)
     fs = FrameSegment(s, remoteHost, remotePort)
-    # (w,h) = pg.size()
     fs.start()
     try:
         while True:
