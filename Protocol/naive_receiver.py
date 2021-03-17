@@ -1,5 +1,5 @@
 import socket
-from Protocol import *
+from protocol import *
 
 MAX_DGRAM = 65546
 datagram_builder = DatagramBuilder()

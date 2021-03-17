@@ -7,7 +7,7 @@ import d3dshot
 import turbojpeg
 
 # import pyautogui as pg
-from Protocol import *
+from protocol import *
 
 
 class FrameSegment(threading.Thread):
@@ -26,7 +26,7 @@ class FrameSegment(threading.Thread):
     def __init__(self, sock, addr, port):
         threading.Thread.__init__(self)
         self.s = sock
-        self.scn = gpu_screenshots()
+        self.scn = FastScreenshots()
         self.signal = True
         self.datagram_builder = DatagramBuilder('!I?')
         self.seq = -1
@@ -69,7 +69,7 @@ class FrameSegment(threading.Thread):
         self.scn.stop()
 
 
-class gpu_screenshots():
+class FastScreenshots:
     def __init__(self):
         self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=3)
 

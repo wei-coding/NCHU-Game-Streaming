@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import socket
 import struct
-from Protocol import *
+from protocol import *
 import threading
 import time
 

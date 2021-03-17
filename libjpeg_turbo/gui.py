@@ -4,12 +4,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
 import sender
-import socket
 import serverui as ui
 
 
 class Main(QMainWindow, ui.Ui_MainWindow):
-
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -40,7 +38,6 @@ class Main(QMainWindow, ui.Ui_MainWindow):
 
 
 class Worker(QThread):
-
     def __init__(self,  ret: list, server, parent=None):
         QThread.__init__(self, parent=parent)
         self.server = sender.StartServer()
