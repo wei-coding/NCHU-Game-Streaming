@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\serverui.ui'
+# Form implementation generated from reading ui file 'serverui.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -34,6 +34,7 @@ class Ui_MainWindow(object):
         self.Start_Button.setGeometry(QtCore.QRect(270, 260, 93, 28))
         self.Start_Button.setObjectName("Start_Button")
         self.Stop_Button = QtWidgets.QPushButton(self.centralwidget)
+        self.Stop_Button.setEnabled(False)
         self.Stop_Button.setGeometry(QtCore.QRect(370, 260, 93, 28))
         self.Stop_Button.setObjectName("Stop_Button")
         MainWindow.setCentralWidget(self.centralwidget)
@@ -57,13 +58,3 @@ class Ui_MainWindow(object):
         self.label_2.setText(_translate("MainWindow", "port:"))
         self.Start_Button.setText(_translate("MainWindow", "開始"))
         self.Stop_Button.setText(_translate("MainWindow", "停止"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
