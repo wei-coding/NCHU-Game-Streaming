@@ -5,57 +5,88 @@ from PyQt5.QtGui import *
 
 import sender
 import serverui as ui
+import webbrowser
 
 
 class Main(QMainWindow, ui.Ui_MainWindow):
+    stop_sig = pyqtSignal()
+    start_sig = pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.Start_Button.clicked.connect(self.start_button_clicked)
-        self.Stop_Button.clicked.connect(self.stop_button_clicked)
-        self.server = sender.StartServer()
+        self.start_button.clicked.connect(self.start_button_clicked)
+        self.stop_button.clicked.connect(self.stop_button_clicked)
+        self.server = None
         self.server_thread = None
         self.cli_addr = []
         self.ip = []
         self.iptool = IpService(self.ip, self)
         self.iptool.start()
         self.iptool.finished.connect(self.show_my_ip)
+        self.stop_sig.connect(self.after_server_stop)
+        self.start_sig.connect(self.after_server_start)
+
+        self.write_welcome_message()
+        self.about_button.clicked.connect(lambda: webbrowser.open('https://github.com/wei-coding/Game-Streaming-Nchu'))
 
     def start_button_clicked(self):
-        self.logs.appendPlainText('start server.\nwaiting for request...')
-        self.server.start()
+        self.logs.appendPlainText('start server.\nwaiting for connection.')
+        port = self.port_textedit.toPlainText()
+        if port == '':
+            self.server = sender.StartServer(parent=self)
+        else:
+            self.server = sender.StartServer(int(port), self)
         self.server_thread = ServerService(self.cli_addr, self.server, self)
         self.server_thread.start()
         self.server_thread.finished.connect(self.client_connected)
-        self.Start_Button.setEnabled(False)
-        self.Stop_Button.setEnabled(True)
+        self.start_button.setEnabled(False)
+        self.stop_button.setEnabled(False)
+
+    def after_server_start(self):
+        self.logs.appendPlainText('server has started.')
+        self.start_button.setEnabled(False)
+        self.stop_button.setEnabled(True)
+        self.port_textedit.setEnabled(False)
 
     def client_connected(self):
-        self.logs.appendPlainText(f'client ip:{self.cli_addr[0]} connected')
+        self.logs.appendPlainText(f'client ip: {self.cli_addr[0]} connected')
 
     def stop_button_clicked(self):
         self.logs.appendPlainText('stop server')
-        self.server.stop()
-        self.logs.appendPlainText('server has stopped.')
-        self.Start_Button.setEnabled(True)
-        self.Stop_Button.setEnabled(False)
+        self.server_thread.stop()
+        self.start_button.setEnabled(False)
+        self.stop_button.setEnabled(False)
 
     def show_my_ip(self):
-        self.logs.appendPlainText(f'server ip:{self.ip[0]}')
+        self.logs.appendPlainText(f'server ip: {self.ip[0]}')
+
+    def after_server_stop(self):
+        self.logs.appendPlainText('server has stopped.')
+        self.start_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
+        self.port_textedit.setEnabled(True)
+
+    def write_welcome_message(self):
+        self.logs.appendPlainText('Welcome to GameStreaming Server!')
 
 
 class ServerService(QThread):
     def __init__(self, ret: list, server, parent=None):
         QThread.__init__(self, parent=parent)
-        self.server = sender.StartServer()
+        self.server = server
         self.client_addr = None
         self.server = server
+        self.server.start()
         self.ret = ret
 
     def run(self):
         while self.client_addr is None:
             self.client_addr = self.server.get_addr()
         self.ret.append(self.client_addr)
+
+    def stop(self):
+        self.server.stop()
 
 
 class IpService(QThread):

@@ -86,30 +86,35 @@ class FastScreenshots:
 
 
 class StartServer(threading.Thread):
-    def __init__(self):
+    def __init__(self, port: int = 12345, parent=None):
         threading.Thread.__init__(self)
         self.s = None
         self.fs = None
         self.signal = True
         self.remoteHost = None
         self.remotePort = None
+        self.port = port
+        self.parent = parent
 
     def run(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        port = 12345
-        self.s.bind(('', port))
+        self.s.bind(('', self.port))
 
         revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
-        while revcData != b'R':
+        while revcData != b'R' and self.signal:
             revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
         self.s.sendto(b'A', (self.remoteHost, self.remotePort))
         revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
-        while revcData != b'A':
+        while revcData != b'A' and self.signal:
             revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
         self.fs = FrameSegment(self.s, self.remoteHost, self.remotePort)
         self.fs.start()
+        self.parent.start_sig.emit()
+        self.parent.logs.appendPlainText('server is running.')
         while self.signal:
             time.sleep(2)
+        self.parent.logs.appendPlainText('server is closing.')
+        self.parent.stop_sig.emit()
         self.fs.stop()
         self.s.close()
 

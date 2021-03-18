@@ -8,7 +8,7 @@ MAX_DGRAM = 2 ** 16
 datagram_builder = DatagramBuilder('!I?')
 jpeg = turbojpeg.TurboJPEG()
 img_buffer = []
-server_ip = '127.0.0.1'
+server_ip = '192.168.43.2'
 port = 12345
 
 
