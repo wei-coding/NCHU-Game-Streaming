@@ -41,6 +41,8 @@
 * 使用pyqt5建立GUI
 * 已經實作三向交握
 * decode出現JPEG corrupt的狀況還待解決，會造成畫面閃爍
+* 三向交握封包應該要用protocol實作
+* 看要不要直接用structure來傳
 
 ## 安裝說明
 

@@ -3,12 +3,12 @@ import cv2
 import turbojpeg
 
 from protocol import *
+import ctypes
 
 MAX_DGRAM = 2 ** 16
-datagram_builder = DatagramBuilder('!I?')
 jpeg = turbojpeg.TurboJPEG()
 img_buffer = []
-server_ip = '192.168.43.2'
+server_ip = '192.168.31.174'
 port = 12345
 
 
@@ -16,9 +16,9 @@ def dump_buffer(s):
     """ Emptying buffer frame """
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        (seq, last) = datagram_builder.unpack(seg)
+        data = DatagramHeader.from_buffer_copy(seg)
         # print(last)
-        if last:
+        if data.last:
             print("finish emptying buffer")
             break
 
@@ -43,10 +43,10 @@ def main():
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
         # print('Got packet.')
-        (seq, last) = datagram_builder.unpack(seg)
-        payload = seg[datagram_builder.packsize:]
+        dtg = DatagramHeader.from_buffer_copy(seg)
+        payload = seg[ctypes.sizeof(DatagramHeader):]
         # print(seq,last,timestamp,payload)
-        if not last:
+        if not dtg.last:
             dat += payload
         else:
             dat += payload

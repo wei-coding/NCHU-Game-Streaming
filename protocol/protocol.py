@@ -1,11 +1,16 @@
 from ctypes import *
 import struct
+
+format_ = '!I?I'
+
 class DatagramHeader(Structure):
     _fields_ = [
-        ('seq',c_uint),
-        ('last',c_bool),
-        ('timestamp',c_uint),
+        ('seq', c_uint),
+        ('last', c_bool),
+        ('timestamp', c_long),
     ]
+
+
 class DatagramBuilder():
     def __init__(self):
         pass

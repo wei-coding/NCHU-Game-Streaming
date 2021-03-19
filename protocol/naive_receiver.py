@@ -1,30 +1,32 @@
 import socket
-from protocol import *
+import protocol
+import ctypes
 
-MAX_DGRAM = 65546
-datagram_builder = DatagramBuilder()
+MAX_DGRAM = 2**16
 
 def dump_buffer(s):
     """ Emptying buffer frame """
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        (seq,last,timestamp,payload,end) = datagram_builder.unpack(seg)
-        print(last)
-        if last:
+        data = protocol.DatagramHeader.from_buffer_copy(seg)
+        print(data.last)
+        if data.last:
             print("finish emptying buffer")
             break
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.bind(('192.168.56.101', 12345))
+s.bind(('127.0.0.1', 12345))
 dat = b''
-dump_buffer(s)
+#dump_buffer(s)
 
-seg, addr = s.recvfrom(MAX_DGRAM)
-while seq is not None:
-    (seq,last,timestamp,payload,end) = datagram_builder.unpack(seg)
-    if not last:
-        dat += payload
-    else:
-        dat += payload
-        print(dat)
-s.close()
+try:
+    while True:
+        seg, addr = s.recvfrom(MAX_DGRAM)
+        data = protocol.DatagramHeader.from_buffer_copy(seg)
+        if not data.last:
+            dat += seg[ctypes.sizeof(protocol.DatagramHeader):]
+        else:
+            dat += seg[ctypes.sizeof(protocol.DatagramHeader):]
+            print(dat)
+except KeyboardInterrupt:
+    s.close()

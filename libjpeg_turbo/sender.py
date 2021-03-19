@@ -5,8 +5,6 @@ import time
 import cv2
 import d3dshot
 import turbojpeg
-
-# import pyautogui as pg
 from protocol import *
 
 
@@ -17,10 +15,6 @@ class FrameSegment(threading.Thread):
     """
     MAX_DGRAM = 2 ** 16 - 64
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
-    # ENCODE_PARAM_JPEG = [int(cv2.IMWRITE_JPEG_QUALITY), 50, int(cv2.IMWRITE_JPEG_PROGRESSIVE), 0,
-    #                     int(cv2.IMWRITE_JPEG_OPTIMIZE), 0]
-    # ENCODE_PARAM_PNG = [int(cv2.IMWRITE_PNG_COMPRESSION), 7]
-    # ENCODE_PARAM_WEBP = [int(cv2.IMWRITE_WEBP_QUALITY), 101]
     JPEG = turbojpeg.TurboJPEG()
 
     def __init__(self, sock, addr, port):
@@ -28,8 +22,8 @@ class FrameSegment(threading.Thread):
         self.s = sock
         self.scn = FastScreenshots()
         self.signal = True
-        self.datagram_builder = DatagramBuilder('!I?')
         self.seq = -1
+        self.frame = -1
         self.addr = addr
         self.port = port
         self.scn.start()
@@ -41,6 +35,7 @@ class FrameSegment(threading.Thread):
         """
         while self.signal:
             img = self.scn.get_latest_frame()[1]
+            self.frame += 1
             if img is not None:
                 # compress_img = cv2.imencode('.jpg', img, self.ENCODE_PARAM_JPEG)[1]
                 # dat = compress_img.tobytes()
@@ -48,14 +43,20 @@ class FrameSegment(threading.Thread):
                 size = len(dat)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
-                raw_data = b''
+                send_data = b''
                 while count:
                     self.seq += 1
                     self.seq %= 1024
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    now = time.time()
-                    send_data = self.datagram_builder.pack(self.seq,
-                                                           True if count == 1 else False) + dat[array_pos_start:array_pos_end]
+                    now = time.time_ns()
+                    send_data = bytes(DatagramHeader(
+                        self.seq,
+                        self.frame,
+                        True if count == 1 else False,
+                        0,
+                        now,
+                        0,
+                    )) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
