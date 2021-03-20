@@ -4,6 +4,9 @@ import turbojpeg
 
 from protocol import *
 import ctypes
+import time
+import struct
+import traceback
 
 MAX_DGRAM = 2 ** 16
 jpeg = turbojpeg.TurboJPEG()
@@ -16,9 +19,8 @@ def dump_buffer(s):
     """ Emptying buffer frame """
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        data = DatagramHeader.from_buffer_copy(seg)
-        # print(last)
-        if data.last:
+        data = seg[:struct.calcsize('!?')]
+        if data:
             print("finish emptying buffer")
             break
 
@@ -26,39 +28,37 @@ def dump_buffer(s):
 def main():
     """ Getting image udp frame &
     concate before decode and output image """
-
+    seq = 0
     # Set up socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    recv = None
-    addr = None
-    while recv != b'A':
-        s.sendto(b'R', (server_ip, port))
+    while True:
+        dat = create_datagram(seq=seq, frm=0, last=True, fn=0, timestamp=time.time_ns(), parity=0, payload=b'R')
+        seq += 1
+        s.sendto(dat, (server_ip, port))
         recv, addr = s.recvfrom(1024)
-    s.sendto(b'A', (server_ip, port))
+        header = DatagramHeader.from_buffer_copy(recv)
+        if header.fn == 0 and get_payload(recv) == b'A':
+            break
+    dat = create_datagram(seq=seq, frm=0, last=True, fn=0, timestamp=time.time_ns(), parity=0, payload=b'A')
+    seq += 1
+    s.sendto(dat, (server_ip, port))
     previous_img = None
     img = None
     dat = b''
     dump_buffer(s)
-    now_seq = 0
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        # print('Got packet.')
-        dtg = DatagramHeader.from_buffer_copy(seg)
-        payload = seg[ctypes.sizeof(DatagramHeader):]
-        # print(seq,last,timestamp,payload)
-        if not dtg.last:
-            dat += payload
-        else:
-            dat += payload
-            # img = cv2.imdecode(np.fromstring(dat, dtype=np.uint8), 1)
+        payload = seg[struct.calcsize('!?'):]
+        dat += payload
+        if struct.unpack('!?', seg[:struct.calcsize('!?')]):
             try:
                 img = jpeg.decode(dat)
             except Exception:
-                pass
+                traceback.print_exc()
             if img is not None:
                 cv2.imshow('frame', img)
                 previous_img = img
-            else:
+            elif previous_img is not None:
                 cv2.imshow('frame', previous_img)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
