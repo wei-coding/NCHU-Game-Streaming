@@ -6,6 +6,8 @@ import cv2
 import d3dshot
 import turbojpeg
 from protocol import *
+import ctypes
+import struct
 
 
 class FrameSegment(threading.Thread):
@@ -37,26 +39,21 @@ class FrameSegment(threading.Thread):
             img = self.scn.get_latest_frame()[1]
             self.frame += 1
             if img is not None:
-                # compress_img = cv2.imencode('.jpg', img, self.ENCODE_PARAM_JPEG)[1]
-                # dat = compress_img.tobytes()
-                dat = self.JPEG.encode(img, quality=60)
+                dat = self.JPEG.encode(img, quality=50)
                 size = len(dat)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
-                send_data = b''
                 while count:
                     self.seq += 1
-                    self.seq %= 1024
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    now = time.time_ns()
-                    send_data = bytes(DatagramHeader(
+                    # now = ctypes.c_double(time.time())
+                    '''send_data = bytes(GSPHeader(
                         self.seq,
                         self.frame,
                         True if count == 1 else False,
-                        0,
                         now,
-                        0,
-                    )) + dat[array_pos_start:array_pos_end]
+                    )) + dat[array_pos_start:array_pos_end]'''
+                    send_data = struct.pack("!?", True if count == 1 else False) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
@@ -72,15 +69,17 @@ class FrameSegment(threading.Thread):
 
 class FastScreenshots:
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=3)
+        self.d = d3dshot.create(capture_output='pil', frame_buffer_size=3)
 
     def start(self):
         self.d.capture()
 
     def get_latest_frame(self):
-        r = self.d.get_latest_frame()
-        r = cv2.cvtColor(r, cv2.COLOR_BGR2RGB) if r is not None else None
-        return True if r is not None else False, r
+        try:
+            r = cv2.cvtColor(self.d.get_latest_frame(), cv2.COLOR_BGR2RGB)
+        except cv2.error:
+            return False, None
+        return True, self.d.get_latest_frame()
 
     def stop(self):
         self.d.stop()
@@ -92,23 +91,37 @@ class StartServer(threading.Thread):
         self.s = None
         self.fs = None
         self.signal = True
-        self.remoteHost = None
-        self.remotePort = None
+        self.remote_host = None
+        self.remote_port = None
         self.port = port
         self.parent = parent
+        self.seq = 0
 
     def run(self):
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.s.bind(('', self.port))
 
-        revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
-        while revcData != b'R' and self.signal:
-            revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
-        self.s.sendto(b'A', (self.remoteHost, self.remotePort))
-        revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
-        while revcData != b'A' and self.signal:
-            revcData, (self.remoteHost, self.remotePort) = self.s.recvfrom(1024)
-        self.fs = FrameSegment(self.s, self.remoteHost, self.remotePort)
+        """ implement three way handshake """
+        # Wait for request
+        while self.signal:
+            recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
+            recv = GSCPHeader.from_buffer_copy(recv)
+            if recv.type == b'I' and recv.fn == b'R':
+                break
+
+        # Got request, send response
+        packet = GSCPHeader(self.seq, b'I', b'A', time.time())
+        self.seq += 1
+        self.s.sendto(packet, (self.remote_host, self.remote_port))
+
+        # Wait for another response from client
+        while self.signal:
+            recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
+            recv = GSCPHeader.from_buffer_copy(recv)
+            if recv.type == b'I' and recv.fn == b'A':
+                break
+        """ end of three way handshake """
+        self.fs = FrameSegment(self.s, self.remote_host, self.remote_port)
         self.fs.start()
         self.parent.start_sig.emit()
         self.parent.logs.appendPlainText('server is running.')
@@ -123,7 +136,7 @@ class StartServer(threading.Thread):
         self.signal = False
 
     def get_addr(self):
-        return self.remoteHost
+        return self.remote_host
 
 
 def main():
