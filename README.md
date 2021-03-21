@@ -43,6 +43,7 @@
 * decode出現JPEG corrupt的狀況還待解決，會造成畫面閃爍
 * 三向交握封包應該要用protocol實作
 * 看要不要直接用structure來傳
+* 目前發現UDP傳輸封包在全螢幕時非常不穩定，考慮改走TCP
 
 ## 安裝說明
 
