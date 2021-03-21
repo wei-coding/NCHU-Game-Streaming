@@ -48,12 +48,10 @@ def main():
     s.sendto(packet, (server_ip, port))
     print('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
     """ end of three way handshake """
-
     previous_img = None
     img = None
     dat = b''
     dump_buffer(s)
-    now_seq = 0
     while True:
         try:
             seg, addr = s.recvfrom(MAX_DGRAM)
@@ -75,7 +73,7 @@ def main():
             try:
                 img = jpeg.decode(dat)
             except Exception:
-                pass
+                traceback.print_exc()
             if img is not None:
                 cv2.imshow('frame', img)
                 previous_img = img

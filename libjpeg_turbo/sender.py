@@ -15,7 +15,7 @@ class FrameSegment(threading.Thread):
     Object to break down image frame segment
     if the size of image exceed maximum datagram size
     """
-    MAX_DGRAM = 2 ** 16 - 64
+    MAX_DGRAM = 2 ** 16
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
     JPEG = turbojpeg.TurboJPEG()
 
@@ -36,7 +36,7 @@ class FrameSegment(threading.Thread):
         into data segments
         """
         while self.signal:
-            img = self.scn.get_latest_frame()[1]
+            sucess, img = self.scn.get_latest_frame()
             self.frame += 1
             if img is not None:
                 dat = self.JPEG.encode(img, quality=50)
