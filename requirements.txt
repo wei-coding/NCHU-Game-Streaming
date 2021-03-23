@@ -3,3 +3,5 @@ d3dshot
 pyturbojpeg
 pyqt5
 pillow
+flask
+waitress

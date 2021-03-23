@@ -15,7 +15,7 @@ class FrameSegment(threading.Thread):
     Object to break down image frame segment
     if the size of image exceed maximum datagram size
     """
-    MAX_DGRAM = 2 ** 16
+    MAX_DGRAM = 2 ** 16 - 64
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
     JPEG = turbojpeg.TurboJPEG()
 
@@ -39,10 +39,14 @@ class FrameSegment(threading.Thread):
             sucess, img = self.scn.get_latest_frame()
             self.frame += 1
             if img is not None:
-                dat = self.JPEG.encode(img, quality=50)
+                now = time.time()
+                dat = self.JPEG.encode(img, quality=70)
+                encode_time = time.time() - now
+                print('encode time=', encode_time)
                 size = len(dat)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
+                now = time.time()
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
@@ -58,6 +62,8 @@ class FrameSegment(threading.Thread):
                     array_pos_start = array_pos_end
                     count -= 1
                     # time.sleep(10)
+                send_time = time.time() - now
+                print('send time=', send_time)
             else:
                 # print("Sleeping...")
                 time.sleep(0.01)
@@ -69,17 +75,17 @@ class FrameSegment(threading.Thread):
 
 class FastScreenshots:
     def __init__(self):
-        self.d = d3dshot.create(capture_output='pil', frame_buffer_size=3)
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=3)
 
     def start(self):
         self.d.capture()
 
     def get_latest_frame(self):
-        try:
-            r = cv2.cvtColor(self.d.get_latest_frame(), cv2.COLOR_BGR2RGB)
-        except cv2.error:
+        frame = self.d.get_latest_frame()
+        if frame is not None:
+            return True, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        else:
             return False, None
-        return True, self.d.get_latest_frame()
 
     def stop(self):
         self.d.stop()
@@ -100,7 +106,7 @@ class StartServer(threading.Thread):
     def run(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.s.bind(('', self.port))
-
+        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         """ implement three way handshake """
         # Wait for request
         while self.signal:

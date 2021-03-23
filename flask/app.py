@@ -5,10 +5,9 @@ from turbojpeg import TurboJPEG, TJPF_BGR
 
 app = Flask(__name__)
 
-screen = scn.gpu_screenshots()
+screen = scn.FastScreenshots()
 screen.start()
 
-JPEG_ARGUM = [int(cv2.IMWRITE_JPEG_QUALITY), 95, int(cv2.IMWRITE_JPEG_OPTIMIZE), 0]
 jpeg = TurboJPEG()
 
 signal = True
@@ -21,14 +20,9 @@ def gen_frames():
         if not success:
             break
         else:
-            #frame = av.VideoFrame.from_ndarray(frame, format='bgr24')
-            #ret, buffer = cv2.imencode('.jpg', frame, JPEG_ARGUM)
             frame = jpeg.encode(frame, pixel_format=TJPF_BGR)
-            #frame = buffer.tobytes()
-            #frame = stream.encode(frame)
-            
             yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
 
 
 @app.route('/')
