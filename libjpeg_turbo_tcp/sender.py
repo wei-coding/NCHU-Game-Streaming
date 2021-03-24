@@ -19,15 +19,13 @@ class FrameSegment(threading.Thread):
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
     JPEG = turbojpeg.TurboJPEG()
 
-    def __init__(self, sock, addr, port):
+    def __init__(self, conn):
         threading.Thread.__init__(self)
-        self.s = sock
+        self.conn = conn
         self.scn = FastScreenshots()
         self.signal = True
         self.seq = -1
         self.frame = -1
-        self.addr = addr
-        self.port = port
         self.scn.start()
 
     def run(self):
@@ -39,10 +37,7 @@ class FrameSegment(threading.Thread):
             sucess, img = self.scn.get_latest_frame()
             self.frame += 1
             if img is not None:
-                now = time.time()
-                dat = self.JPEG.encode(img, quality=70)
-                encode_time = time.time() - now
-                print('encode time=', encode_time)
+                dat = self.JPEG.encode(img, quality=50)
                 size = len(dat)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
@@ -50,15 +45,8 @@ class FrameSegment(threading.Thread):
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    # now = ctypes.c_double(time.time())
-                    '''send_data = bytes(GSPHeader(
-                        self.seq,
-                        self.frame,
-                        True if count == 1 else False,
-                        now,
-                    )) + dat[array_pos_start:array_pos_end]'''
                     send_data = struct.pack("!?", True if count == 1 else False) + dat[array_pos_start:array_pos_end]
-                    self.s.sendto(send_data, (self.addr, self.port))
+                    self.conn.send(send_data)
                     array_pos_start = array_pos_end
                     count -= 1
                     # time.sleep(10)
@@ -78,7 +66,7 @@ class FastScreenshots:
         self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=3)
 
     def start(self):
-        self.d.capture()
+        self.d.capture(target_fps=30)
 
     def get_latest_frame(self):
         frame = self.d.get_latest_frame()
@@ -98,36 +86,23 @@ class StartServer(threading.Thread):
         self.fs = None
         self.signal = True
         self.remote_host = None
-        self.remote_port = None
         self.port = port
         self.parent = parent
         self.seq = 0
 
     def run(self):
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind(('', self.port))
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        """ implement three way handshake """
-        # Wait for request
-        while self.signal:
-            recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
-            recv = GSCPHeader.from_buffer_copy(recv)
-            if recv.type == b'I' and recv.fn == b'R':
+        self.s.listen(5)
+        while True:
+            print('waiting for connection')
+            conn, addr = self.s.accept()
+            if addr is not None:
+                print(f'{conn} is connected')
+                self.remote_host = addr[0]
                 break
-
-        # Got request, send response
-        packet = GSCPHeader(self.seq, b'I', b'A', time.time())
-        self.seq += 1
-        self.s.sendto(packet, (self.remote_host, self.remote_port))
-
-        # Wait for another response from client
-        while self.signal:
-            recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
-            recv = GSCPHeader.from_buffer_copy(recv)
-            if recv.type == b'I' and recv.fn == b'A':
-                break
-        """ end of three way handshake """
-        self.fs = FrameSegment(self.s, self.remote_host, self.remote_port)
+        self.fs = FrameSegment(conn)
         self.fs.start()
         self.parent.start_sig.emit()
         self.parent.logs.appendPlainText('server is running.')
@@ -148,18 +123,12 @@ class StartServer(threading.Thread):
 def main():
     """ Top level main function """
     # Set up UDP socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     port = 12345
     s.bind(('', port))
-
-    revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    while revcData != b'R':
-        revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    s.sendto(b'A', (remoteHost, remotePort))
-    revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    while revcData != b'A':
-        revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    fs = FrameSegment(s, remoteHost, remotePort)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.listen(5)
+    fs = FrameSegment(s)
     fs.start()
     try:
         while True:
