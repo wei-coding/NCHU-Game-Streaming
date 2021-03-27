@@ -7,13 +7,17 @@ import ctypes
 import struct
 import time
 import traceback
-from measurement import Measure
+from numba import jit
 
 MAX_DGRAM = 2 ** 16 - 64
 jpeg = turbojpeg.TurboJPEG()
 img_buffer = []
 server_ip = '192.168.31.174'
 port = 12345
+
+
+def decode_jpeg(img):
+    return jpeg.decode(img)
 
 
 def dump_buffer(s):
@@ -34,10 +38,6 @@ def main():
     seq = 0
     # Set up socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    measure1 = Measure("decode time =")
-    measure2 = Measure("show time =")
-    measure1.start()
-    measure2.start()
 
     """ implement three way handshake """
     while True:
@@ -77,17 +77,11 @@ def main():
             dat += payload
             # img = cv2.imdecode(np.fromstring(dat, dtype=np.uint8), 1)
             try:
-                now = time.time()
-                img = jpeg.decode(dat)
-                decode_time = time.time() - now
-                measure1.add(decode_time)
+                img = decode_jpeg(dat)
             except Exception:
                 traceback.print_exc()
             if img is not None:
-                now = time.time()
                 cv2.imshow('frame', img)
-                im_time = time.time() - now
-                measure2.add(im_time)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
             dat = b''

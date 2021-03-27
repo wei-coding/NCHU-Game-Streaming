@@ -8,6 +8,12 @@ import turbojpeg
 from protocol import *
 import ctypes
 import struct
+from numba import jit
+
+
+@jit
+def encode_jpeg(turbojpeg_inst, frame):
+    return turbojpeg_inst.encode(frame, quality=70)
 
 
 class FrameSegment(threading.Thread):
@@ -39,10 +45,7 @@ class FrameSegment(threading.Thread):
             sucess, img = self.scn.get_latest_frame()
             self.frame += 1
             if img is not None:
-                now = time.time()
-                dat = self.JPEG.encode(img, quality=70)
-                encode_time = time.time() - now
-                print('encode time=', encode_time)
+                dat = encode_jpeg(self.JPEG, img)
                 size = len(dat)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
@@ -50,13 +53,6 @@ class FrameSegment(threading.Thread):
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    # now = ctypes.c_double(time.time())
-                    '''send_data = bytes(GSPHeader(
-                        self.seq,
-                        self.frame,
-                        True if count == 1 else False,
-                        now,
-                    )) + dat[array_pos_start:array_pos_end]'''
                     send_data = struct.pack("!?", True if count == 1 else False) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
@@ -75,10 +71,10 @@ class FrameSegment(threading.Thread):
 
 class FastScreenshots:
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=3)
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=120)
 
     def start(self):
-        self.d.capture()
+        self.d.capture(target_fps=60)
 
     def get_latest_frame(self):
         frame = self.d.get_latest_frame()

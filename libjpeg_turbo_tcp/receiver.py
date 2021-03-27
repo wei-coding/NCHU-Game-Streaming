@@ -11,7 +11,7 @@ import traceback
 MAX_DGRAM = 2 ** 16 - 64
 jpeg = turbojpeg.TurboJPEG()
 img_buffer = []
-server_ip = 'localhost'
+server_ip = '192.168.0.101'
 port = 12345
 
 
@@ -40,10 +40,13 @@ def main():
             seg = s.recv(MAX_DGRAM)
         except KeyboardInterrupt:
             break
-        last = struct.unpack("!?", seg[:struct.calcsize('!?')])[0]
-        payload = seg[struct.calcsize('!?'):]
-        dat += payload
-        if last:
+        last = struct.unpack("!?", seg[:struct.calcsize('?')])[0]
+        print(last)
+        payload = seg[struct.calcsize('?'):]
+        if not last:
+            dat += payload
+        else:
+            dat += payload
             try:
                 img = jpeg.decode(dat)
             except Exception:
