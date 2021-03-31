@@ -58,8 +58,6 @@ class FrameSegment(threading.Thread):
                     array_pos_start = array_pos_end
                     count -= 1
                     # time.sleep(10)
-                send_time = time.time() - now
-                print('send time=', send_time)
             else:
                 # print("Sleeping...")
                 time.sleep(0.01)
@@ -147,6 +145,7 @@ def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     port = 12345
     s.bind(('', port))
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     revcData, (remoteHost, remotePort) = s.recvfrom(1024)
     while revcData != b'R':

@@ -50,8 +50,6 @@ class FrameSegment(threading.Thread):
                     array_pos_start = array_pos_end
                     count -= 1
                     # time.sleep(10)
-                send_time = time.time() - now
-                print('send time=', send_time)
             else:
                 # print("Sleeping...")
                 time.sleep(0.01)
@@ -63,10 +61,10 @@ class FrameSegment(threading.Thread):
 
 class FastScreenshots:
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=3)
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=120)
 
     def start(self):
-        self.d.capture(target_fps=30)
+        self.d.capture(target_fps=60)
 
     def get_latest_frame(self):
         frame = self.d.get_latest_frame()

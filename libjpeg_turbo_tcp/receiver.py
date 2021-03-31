@@ -11,7 +11,7 @@ import traceback
 MAX_DGRAM = 2 ** 16 - 64
 jpeg = turbojpeg.TurboJPEG()
 img_buffer = []
-server_ip = '192.168.0.101'
+server_ip = '192.168.31.174'
 port = 12345
 
 
