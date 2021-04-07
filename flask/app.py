@@ -10,6 +10,9 @@ app = Flask(__name__)
 screen = scn.FastScreenshots()
 screen.start()
 
+# screen = scn.win32shot()
+# screen.start()
+
 jpeg = TurboJPEG()
 
 signal = True
@@ -26,10 +29,9 @@ def gen_frames():
         success, frame = screen.get_latest_frame()  # read the camera frame
         if not success:
             break
-        else:
-            frame = encode_jpeg(frame)
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+        frame = encode_jpeg(frame)
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
 
 
 @app.route('/')
