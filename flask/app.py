@@ -42,5 +42,13 @@ def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
+@app.route('/continue')
+@app.route('/stop')
+def stop():
+    global signal
+    signal = not signal
+    return render_template('index.html')
+
+
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

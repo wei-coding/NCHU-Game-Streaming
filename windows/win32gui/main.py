@@ -13,7 +13,7 @@ w = right - left
 h = bot - top
 
 hwndDC = win32gui.GetWindowDC(hwnd)
-mfcDC  = win32ui.CreateDCFromHandle(hwndDC)
+mfcDC = win32ui.CreateDCFromHandle(hwndDC)
 saveDC = mfcDC.CreateCompatibleDC()
 
 saveBitMap = win32ui.CreateBitmap()

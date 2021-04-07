@@ -4,7 +4,7 @@ import cv2
 
 class FastScreenshots():
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=3)
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=180)
 
     def start(self):
         self.d.capture(target_fps=45)
