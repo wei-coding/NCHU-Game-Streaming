@@ -13,7 +13,7 @@ from numba import jit
 
 @jit
 def encode_jpeg(turbojpeg_inst, frame):
-    return turbojpeg_inst.encode(frame, quality=70)
+    return turbojpeg_inst.encode(frame, quality=50)
 
 
 class FrameSegment(threading.Thread):
@@ -53,7 +53,7 @@ class FrameSegment(threading.Thread):
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    send_data = struct.pack("!?", True if count == 1 else False) + dat[array_pos_start:array_pos_end]
+                    send_data = struct.pack("!??", True if count == 1 else False, False) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
@@ -65,14 +65,16 @@ class FrameSegment(threading.Thread):
     def stop(self):
         self.signal = False
         self.scn.stop()
+        send_data = struct.pack("!??", False, True)
+        self.s.sendto(send_data, (self.addr, self.port))
 
 
 class FastScreenshots:
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=120)
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=15)
 
     def start(self):
-        self.d.capture(target_fps=60)
+        self.d.capture(target_fps=45)
 
     def get_latest_frame(self):
         frame = self.d.get_latest_frame()

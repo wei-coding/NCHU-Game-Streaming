@@ -14,6 +14,7 @@ jpeg = turbojpeg.TurboJPEG()
 img_buffer = []
 server_ip = '192.168.31.174'
 port = 12345
+stop = False
 
 
 def decode_jpeg(img):
@@ -35,6 +36,7 @@ def dump_buffer(s):
 def main():
     """ Getting image udp frame &
     concate before decode and output image """
+    global stop
     seq = 0
     # Set up socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -58,15 +60,17 @@ def main():
     img = None
     dat = b''
     # dump_buffer(s)
-    while True:
+    while not stop:
         try:
             seg, addr = s.recvfrom(MAX_DGRAM)
         except KeyboardInterrupt:
             break
         # print('Got packet.')
-        last = struct.unpack("!?", seg[:struct.calcsize('!?')])[0]
+        header = struct.unpack("!??", seg[:struct.calcsize('!??')])
+        last = header[0]
+        stop = header[1]
         # print(last)
-        payload = seg[struct.calcsize('!?'):]
+        payload = seg[struct.calcsize('!??'):]
         # header = GSPHeader.from_buffer_copy(seg)
         # last = header.last
         # payload = seg[sizeof(GSPHeader):]
@@ -86,6 +90,7 @@ def main():
                 break
             dat = b''
     # cap.release()
+    print('Server has stopped.')
     cv2.destroyAllWindows()
     s.close()
 

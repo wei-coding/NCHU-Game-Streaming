@@ -17,6 +17,7 @@ jpeg = TurboJPEG()
 
 signal = True
 
+
 @jit
 def encode_jpeg(frame):
     return jpeg.encode(frame, pixel_format=TJPF_BGR)
