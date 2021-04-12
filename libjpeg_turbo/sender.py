@@ -107,20 +107,20 @@ class StartServer(threading.Thread):
         # Wait for request
         while self.signal:
             recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
-            recv = GSCPHeader.from_buffer_copy(recv)
-            if recv.type == b'I' and recv.fn == b'R':
+            recv = GSPHeader.from_buffer_copy(recv)
+            if recv.type == 0 and recv.fn == 0:
                 break
 
         # Got request, send response
-        packet = GSCPHeader(self.seq, b'I', b'A', time.time())
+        packet = GSPHeader(self.seq, 0, 1, 0, False, time.time())
         self.seq += 1
         self.s.sendto(packet, (self.remote_host, self.remote_port))
 
         # Wait for another response from client
         while self.signal:
             recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
-            recv = GSCPHeader.from_buffer_copy(recv)
-            if recv.type == b'I' and recv.fn == b'A':
+            recv = GSPHeader.from_buffer_copy(recv)
+            if recv.type == 0 and recv.fn == 2:
                 break
         """ end of three way handshake """
         self.fs = FrameSegment(self.s, self.remote_host, self.remote_port)
@@ -142,28 +142,7 @@ class StartServer(threading.Thread):
 
 
 def main():
-    """ Top level main function """
-    # Set up UDP socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    port = 12345
-    s.bind(('', port))
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-    revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    while revcData != b'R':
-        revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    s.sendto(b'A', (remoteHost, remotePort))
-    revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    while revcData != b'A':
-        revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    fs = FrameSegment(s, remoteHost, remotePort)
-    fs.start()
-    try:
-        while True:
-            time.sleep(2)
-    except KeyboardInterrupt:
-        fs.stop()
-    s.close()
+    pass
 
 
 if __name__ == "__main__":

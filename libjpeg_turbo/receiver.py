@@ -20,22 +20,21 @@ class Receiver(threading.Thread):
         self.server_ip = server_ip
         self.port = port
         self.jpeg = turbojpeg.TurboJPEG()
-        dump_buffer(self.s)
 
     def run(self):
 
         """ implement three way handshake """
         while True:
             # send request message
-            packet = GSCPHeader(self.seq, b'I', b'R', time.time())
+            packet = GSPHeader(self.seq, 0, 0, 0, False, time.time())
             self.s.sendto(packet, (self.server_ip, self.port))
             # wait for ACK
             recv, addr = self.s.recvfrom(MAX_DGRAM)
-            recv = GSCPHeader.from_buffer_copy(recv)
-            if recv.type == b'I' and recv.fn == b'A':
+            recv = GSPHeader.from_buffer_copy(recv)
+            if recv.type == 0 and recv.fn == 1:
                 break
         # send ACK to server
-        packet = GSCPHeader(self.seq, b'I', b'A', time.time())
+        packet = GSPHeader(self.seq, 0, 2, 0, False, time.time())
         self.s.sendto(packet, (self.server_ip, self.port))
         print('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
         """ end of three way handshake """
@@ -55,7 +54,7 @@ class Receiver(threading.Thread):
             if last:
                 dat += payload
                 try:
-                    img = self.jpeg.decode(img)
+                    img = self.jpeg.decode(dat)
                 except Exception:
                     traceback.print_exc()
                 if img is not None:
@@ -87,7 +86,7 @@ def dump_buffer(s):
 def main():
     """ Getting image udp frame &
     concate before decode and output image """
-    server_ip = '192.168.31.174'
+    server_ip = '192.168.0.113'
     port = 12345
     receiver = Receiver(server_ip, port)
     receiver.start()
