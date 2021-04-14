@@ -2,7 +2,7 @@ import socket
 import cv2
 import turbojpeg
 from protocol import *
-import struct
+import ctypes
 import time
 import traceback
 import threading
@@ -40,16 +40,16 @@ class Receiver(threading.Thread):
         """ end of three way handshake """
         img = None
         dat = b''
-        dump_buffer(self.s)
+        # dump_buffer(self.s)
         while not self.stop:
             try:
                 seg, addr = self.s.recvfrom(MAX_DGRAM)
             except KeyboardInterrupt:
                 break
-            header = struct.unpack("!??", seg[:struct.calcsize('!??')])
-            last = header[0]
-            self.stop = header[1]
-            payload = seg[struct.calcsize('!??'):]
+            header = GSPHeader.from_buffer_copy(seg)
+            last = header.last
+            self.stop = (header.fn == 3)
+            payload = seg[ctypes.sizeof(GSPHeader):]
             dat += payload
             if last:
                 dat += payload
@@ -75,8 +75,6 @@ def dump_buffer(s):
     """ Emptying buffer frame """
     while True:
         seg, addr = s.recvfrom(MAX_DGRAM)
-        # last = seg[:struct.calcsize('!?')]
-        # print(last)
         last = GSPHeader.from_buffer_copy(seg).last
         if last:
             print("finish emptying buffer")

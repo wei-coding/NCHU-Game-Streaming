@@ -53,7 +53,8 @@ class FrameSegment(threading.Thread):
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    send_data = struct.pack("!??", True if count == 1 else False, False) + dat[array_pos_start:array_pos_end]
+                    header = GSPHeader(self.seq, 1, 0, 0, True if count == 1 else False, time.time())
+                    send_data = bytes(header) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
@@ -65,7 +66,7 @@ class FrameSegment(threading.Thread):
     def stop(self):
         self.signal = False
         self.scn.stop()
-        send_data = struct.pack("!??", False, True)
+        send_data = GSPHeader(0, 0, 3, 0, True, time.time())
         self.s.sendto(send_data, (self.addr, self.port))
 
 
