@@ -50,7 +50,7 @@ def krelease(a):
 #socket connect    
 import json
 import socket
-HOST = '192.168.31.207'
+HOST = '192.168.0.101'
 PORT = 8000 
 print("connecting")
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

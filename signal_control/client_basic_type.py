@@ -8,7 +8,7 @@ from pynput.mouse import Listener
 
 import socket
 import time
-HOST = '192.168.31.174'
+HOST = '192.168.0.101'
 PORT = 8000
 clientMessage = ['mp',6,89]
 print(clientMessage)
@@ -45,14 +45,14 @@ def mouse_Thread():
         if not pressed:
             # Stop listener
             tojson={'0':'mr','1':x,'2':y}       
-            print(tojson)
+            #print(tojson)
             tojson=json.dumps(tojson)
             print(tojson)
             client.send(tojson.encode())
             #return False
     def on_scroll(x, y, dx, dy):
         print('Scrolled ',x,y,dx,dy)
-        tojson={'0':'mm','1':dx,'2':dy}       
+        tojson={'0':'ms','1':dx,'2':dy}
         print(tojson)
         tojson=json.dumps(tojson)
         print(tojson)

@@ -24,16 +24,19 @@ class Receiver(threading.Thread):
     def run(self):
 
         """ implement three way handshake """
+        print('trying connect 0')
         while True:
             # send request message
             packet = GSPHeader(self.seq, 0, 0, 0, False, time.time())
             self.s.sendto(packet, (self.server_ip, self.port))
             # wait for ACK
+            print('trying connect 1')
             recv, addr = self.s.recvfrom(MAX_DGRAM)
             recv = GSPHeader.from_buffer_copy(recv)
             if recv.type == 0 and recv.fn == 1:
                 break
         # send ACK to server
+        print('trying connect 2')
         packet = GSPHeader(self.seq, 0, 2, 0, False, time.time())
         self.s.sendto(packet, (self.server_ip, self.port))
         print('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
@@ -84,8 +87,8 @@ def dump_buffer(s):
 def main():
     """ Getting image udp frame &
     concate before decode and output image """
-    server_ip = '192.168.0.113'
-    port = 12345
+    server_ip = '192.168.0.101'
+    port = 12346
     receiver = Receiver(server_ip, port)
     receiver.start()
     receiver.join()
