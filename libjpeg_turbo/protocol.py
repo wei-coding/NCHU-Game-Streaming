@@ -10,6 +10,9 @@ about GSPHeader:
             + 2: ACK for "ACK"
         + normal control:
             + 3: stop transmission
+        + partition control:
+            + 4: this partition is normal
+            + 5: repeation of partition, use old instead 
     - frm: frame number
     - last: whether this is the last packet for the frame
     - timestamp: as it is
@@ -24,6 +27,7 @@ class GSP:
     ACK = 2
     STOP = 3
     NONE = 0
+
 
 
 class GSPHeader(Structure):
