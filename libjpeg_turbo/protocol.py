@@ -7,13 +7,23 @@ about GSPHeader:
         + three way handshake:
             + 0: request for connection
             + 1: same of "SYN,ACK", means got request
-            + 2: ACK for "SYN,ACK"
+            + 2: ACK for "ACK"
         + normal control:
             + 3: stop transmission
     - frm: frame number
     - last: whether this is the last packet for the frame
     - timestamp: as it is
 """
+
+
+class GSP:
+    CONTROL = 0
+    DATA = 1
+    RQST_CONN = 0
+    SYN_ACK = 1
+    ACK = 2
+    STOP = 3
+    NONE = 0
 
 
 class GSPHeader(Structure):

@@ -9,6 +9,9 @@ from protocol import *
 import ctypes
 import struct
 from numba import jit
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import *
+import numpy as np
 
 
 @jit
@@ -29,6 +32,7 @@ class FrameSegment(threading.Thread):
         threading.Thread.__init__(self)
         self.s = sock
         self.scn = FastScreenshots()
+        # self.scn = QtScreenShot()
         self.signal = True
         self.seq = -1
         self.frame = -1
@@ -53,7 +57,7 @@ class FrameSegment(threading.Thread):
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    header = GSPHeader(self.seq, 1, 0, 0, True if count == 1 else False, time.time())
+                    header = GSPHeader(self.seq, GSP.DATA, GSP.NONE, 0, True if count == 1 else False, time.time())
                     send_data = bytes(header) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
@@ -66,7 +70,7 @@ class FrameSegment(threading.Thread):
     def stop(self):
         self.signal = False
         self.scn.stop()
-        send_data = GSPHeader(0, 0, 3, 0, True, time.time())
+        send_data = GSPHeader(0, GSP.CONTROL, GSP.STOP, 0, True, time.time())
         self.s.sendto(send_data, (self.addr, self.port))
 
 
@@ -86,6 +90,31 @@ class FastScreenshots:
 
     def stop(self):
         self.d.stop()
+
+
+class QtScreenShot(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.sig = False
+        self.screen = QtWidgets.QApplication.primaryScreen()
+        self._array = QByteArray()
+        self._buffer = QBuffer(self._array)
+        self._buffer.open(QIODevice.WriteOnly)
+
+    def run(self):
+        while not self.sig:
+            frame = self.screen.grabWindow(QtWidgets.QApplication.desktop().winId())
+            frame = frame.scaled(1280, 720, transformMode=Qt.SmoothTransformation)
+            frame.save(self._buffer, 'jpeg', quality=80)
+
+    def get_latest_frame(self):
+        pixData = self._buffer.data()
+        self._array.clear()
+        self._buffer.close()
+        return False if pixData is None else True, pixData
+
+    def stop(self):
+        self.sig = not self.sig
 
 
 class StartServer(threading.Thread):
