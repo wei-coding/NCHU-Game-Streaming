@@ -8,7 +8,7 @@ import traceback
 import threading
 
 
-MAX_DGRAM = 2 ** 16 - 64
+MAX_DGRAM = 2 ** 12
 
 
 class Receiver(threading.Thread):

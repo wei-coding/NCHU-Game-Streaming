@@ -24,7 +24,7 @@ class FrameSegment(threading.Thread):
     Object to break down image frame segment
     if the size of image exceed maximum datagram size
     """
-    MAX_DGRAM = 2 ** 16 - 64
+    MAX_DGRAM = 2 ** 12
     MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
     JPEG = turbojpeg.TurboJPEG()
 
@@ -48,12 +48,14 @@ class FrameSegment(threading.Thread):
         while self.signal:
             sucess, img = self.scn.get_latest_frame()
             self.frame += 1
+            self.frame %= 256
             if img is not None:
                 dat = encode_jpeg(self.JPEG, img)
+
+                # print(len(dat))
                 size = len(dat)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
-                now = time.time()
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
@@ -76,10 +78,10 @@ class FrameSegment(threading.Thread):
 
 class FastScreenshots:
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=15)
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=90)
 
     def start(self):
-        self.d.capture(target_fps=45)
+        self.d.capture(target_fps=60)
 
     def get_latest_frame(self):
         frame = self.d.get_latest_frame()
