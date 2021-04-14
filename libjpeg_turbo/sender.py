@@ -13,7 +13,7 @@ from numba import jit
 
 @jit
 def encode_jpeg(turbojpeg_inst, frame):
-    return turbojpeg_inst.encode(frame, quality=70)
+    return turbojpeg_inst.encode(frame, quality=50)
 
 
 class FrameSegment(threading.Thread):
@@ -53,7 +53,8 @@ class FrameSegment(threading.Thread):
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    send_data = struct.pack("!?", True if count == 1 else False) + dat[array_pos_start:array_pos_end]
+                    header = GSPHeader(self.seq, 1, 0, 0, True if count == 1 else False, time.time())
+                    send_data = bytes(header) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
@@ -65,14 +66,16 @@ class FrameSegment(threading.Thread):
     def stop(self):
         self.signal = False
         self.scn.stop()
+        send_data = GSPHeader(0, 0, 3, 0, True, time.time())
+        self.s.sendto(send_data, (self.addr, self.port))
 
 
 class FastScreenshots:
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=120)
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=15)
 
     def start(self):
-        self.d.capture(target_fps=60)
+        self.d.capture(target_fps=45)
 
     def get_latest_frame(self):
         frame = self.d.get_latest_frame()
@@ -105,20 +108,20 @@ class StartServer(threading.Thread):
         # Wait for request
         while self.signal:
             recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
-            recv = GSCPHeader.from_buffer_copy(recv)
-            if recv.type == b'I' and recv.fn == b'R':
+            recv = GSPHeader.from_buffer_copy(recv)
+            if recv.type == 0 and recv.fn == 0:
                 break
 
         # Got request, send response
-        packet = GSCPHeader(self.seq, b'I', b'A', time.time())
+        packet = GSPHeader(self.seq, 0, 1, 0, False, time.time())
         self.seq += 1
         self.s.sendto(packet, (self.remote_host, self.remote_port))
 
         # Wait for another response from client
         while self.signal:
             recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
-            recv = GSCPHeader.from_buffer_copy(recv)
-            if recv.type == b'I' and recv.fn == b'A':
+            recv = GSPHeader.from_buffer_copy(recv)
+            if recv.type == 0 and recv.fn == 2:
                 break
         """ end of three way handshake """
         self.fs = FrameSegment(self.s, self.remote_host, self.remote_port)
@@ -140,28 +143,7 @@ class StartServer(threading.Thread):
 
 
 def main():
-    """ Top level main function """
-    # Set up UDP socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    port = 12345
-    s.bind(('', port))
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-    revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    while revcData != b'R':
-        revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    s.sendto(b'A', (remoteHost, remotePort))
-    revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    while revcData != b'A':
-        revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    fs = FrameSegment(s, remoteHost, remotePort)
-    fs.start()
-    try:
-        while True:
-            time.sleep(2)
-    except KeyboardInterrupt:
-        fs.stop()
-    s.close()
+    pass
 
 
 if __name__ == "__main__":
