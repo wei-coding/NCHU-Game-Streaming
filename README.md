@@ -45,6 +45,12 @@
 * 看要不要直接用structure來傳
 * 目前發現UDP傳輸封包在全螢幕時非常不穩定，考慮改走TCP
 
+#### 四月
+
+* 想找更快的截圖方法，但看起來還是d3dshot+turbojpeg最快
+* 將封包切成更小段，提昇傳輸穩定度，閃爍也較少了
+* 建立client GUI
+
 ## 安裝說明
 
 * 見requirements.txt
