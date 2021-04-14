@@ -43,7 +43,7 @@ def kpress(a):
 def krelease(a):
     keyboard_control.release(a)
     print('keyboard release',a)
-    check_if_press.remove(a)
+    check_if_press['get'].remove(a)
     
     
     
@@ -98,19 +98,19 @@ while True:
     elif signal['0']=='kr':
         if signal['1']=='up':
             keyboard_control.release(keyboard.Key.up)
-            check_if_press.remove('up')
+            check_if_press['get'].remove('up')
         elif signal['1']=='down':
             keyboard_control.release(keyboard.Key.down)
-            check_if_press.remove('down')
+            check_if_press['get'].remove('down')
         elif signal['1']=='left':
             keyboard_control.release(keyboard.Key.left)
-            check_if_press.remove('left')
+            check_if_press['get'].remove('left')
         elif signal['1']=='right':
             keyboard_control.release(keyboard.Key.right)
-            check_if_press.remove('right')
+            check_if_press['get'].remove('right')
         elif signal['1']=='enter':
             keyboard_control.release(keyboard.Key.enter)
-            check_if_press.remove('enter')
+            check_if_press['get'].remove('enter')
         else:
             krelease((signal['1']))
     """i=0
