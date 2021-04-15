@@ -8,7 +8,7 @@ import traceback
 import threading
 
 
-MAX_DGRAM = 2 ** 12
+MAX_DGRAM = 2 ** 16
 
 
 class Receiver(threading.Thread):
@@ -87,7 +87,7 @@ def dump_buffer(s):
 def main():
     """ Getting image udp frame &
     concate before decode and output image """
-    server_ip = '192.168.31.174'
+    server_ip = '192.168.1.9'
     port = 12345
     receiver = Receiver(server_ip, port)
     receiver.start()

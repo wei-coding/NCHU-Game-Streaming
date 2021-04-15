@@ -6,15 +6,11 @@ import cv2
 import d3dshot
 import turbojpeg
 from protocol import *
-import ctypes
-import struct
-from numba import jit
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
 import numpy as np
 
 
-@jit
 def encode_jpeg(turbojpeg_inst, frame):
     return turbojpeg_inst.encode(frame, quality=50)
 
@@ -24,8 +20,8 @@ class FrameSegment(threading.Thread):
     Object to break down image frame segment
     if the size of image exceed maximum datagram size
     """
-    MAX_DGRAM = 2 ** 12
-    MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
+    MAX_DGRAM = 2 ** 16
+    MAX_IMAGE_DGRAM = MAX_DGRAM >> 6  # extract 64 bytes in case UDP frame overflown
     JPEG = turbojpeg.TurboJPEG()
 
     def __init__(self, sock, addr, port):
