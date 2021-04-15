@@ -8,13 +8,13 @@ import traceback
 import threading
 
 
-MAX_DGRAM = 2 ** 12
+MAX_DGRAM = 2 ** 16
 
 
 class Receiver(threading.Thread):
     def __init__(self, server_ip, port):
         threading.Thread.__init__(self)
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.stop = False
         self.seq = 0
         self.server_ip = server_ip
@@ -22,31 +22,31 @@ class Receiver(threading.Thread):
         self.jpeg = turbojpeg.TurboJPEG()
 
     def run(self):
-
+        self.s.connect((self.server_ip, self.port))
         """ implement three way handshake """
         print('trying connect 0')
         while True:
             # send request message
             packet = GSPHeader(self.seq, GSP.CONTROL, GSP.RQST_CONN, 0, False, time.time())
-            self.s.sendto(packet, (self.server_ip, self.port))
+            self.s.send(packet)
             # wait for ACK
             print('trying connect 1')
-            recv, addr = self.s.recvfrom(MAX_DGRAM)
+            recv = self.s.recv(MAX_DGRAM)
             recv = GSPHeader.from_buffer_copy(recv)
             if recv.type == 0 and recv.fn == 1:
                 break
         # send ACK to server
         print('trying connect 2')
         packet = GSPHeader(self.seq, GSP.CONTROL, GSP.ACK, 0, False, time.time())
-        self.s.sendto(packet, (self.server_ip, self.port))
-        print('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
+        self.s.send(packet)
+        # print('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
         """ end of three way handshake """
         img = None
         dat = b''
         # dump_buffer(self.s)
         while not self.stop:
             try:
-                seg, addr = self.s.recvfrom(MAX_DGRAM)
+                seg = self.s.recv(MAX_DGRAM)
             except KeyboardInterrupt:
                 break
             header = GSPHeader.from_buffer_copy(seg)
@@ -87,7 +87,7 @@ def dump_buffer(s):
 def main():
     """ Getting image udp frame &
     concate before decode and output image """
-    server_ip = '192.168.31.174'
+    server_ip = '192.168.1.9'
     port = 12345
     receiver = Receiver(server_ip, port)
     receiver.start()
