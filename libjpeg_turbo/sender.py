@@ -72,12 +72,29 @@ class FrameSegment(threading.Thread):
         self.s.sendto(send_data, (self.addr, self.port))
 
 
+class BufferClearService(threading.Thread):
+    def __init__(self, buffer):
+        threading.Thread.__init__(self)
+        self.buffer = buffer
+        self.sig = False
+
+    def run(self):
+        while not self.sig:
+            time.sleep(1)
+            self.buffer.clear()
+
+    def stop(self):
+        self.sig = not self.sig
+
+
 class FastScreenshots:
     def __init__(self):
         self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=90)
+        self.clear_service = BufferClearService(self.d.frame_buffer)
 
     def start(self):
         self.d.capture(target_fps=60)
+        self.clear_service.start()
 
     def get_latest_frame(self):
         frame = self.d.get_latest_frame()
@@ -88,6 +105,7 @@ class FastScreenshots:
 
     def stop(self):
         self.d.stop()
+        self.clear_service.stop()
 
 
 class QtScreenShot(threading.Thread):
