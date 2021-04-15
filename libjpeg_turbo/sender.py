@@ -21,10 +21,10 @@ class FrameSegment(threading.Thread):
     if the size of image exceed maximum datagram size
     """
     MAX_DGRAM = 2 ** 16
-    MAX_IMAGE_DGRAM = MAX_DGRAM >> 6  # extract 64 bytes in case UDP frame overflown
+    MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
     JPEG = turbojpeg.TurboJPEG()
 
-    def __init__(self, sock, addr, port):
+    def __init__(self, sock, addr, port, conn):
         threading.Thread.__init__(self)
         self.s = sock
         self.scn = FastScreenshots()
@@ -35,6 +35,7 @@ class FrameSegment(threading.Thread):
         self.addr = addr
         self.port = port
         self.scn.start()
+        self.conn = conn
 
     def run(self):
         """
@@ -57,7 +58,7 @@ class FrameSegment(threading.Thread):
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
                     header = GSPHeader(self.seq, GSP.DATA, GSP.NONE, 0, True if count == 1 else False, time.time())
                     send_data = bytes(header) + dat[array_pos_start:array_pos_end]
-                    self.s.sendto(send_data, (self.addr, self.port))
+                    self.conn.send(send_data)
                     array_pos_start = array_pos_end
                     count -= 1
                     # time.sleep(10)
@@ -69,7 +70,7 @@ class FrameSegment(threading.Thread):
         self.signal = False
         self.scn.stop()
         send_data = GSPHeader(0, GSP.CONTROL, GSP.STOP, 0, True, time.time())
-        self.s.sendto(send_data, (self.addr, self.port))
+        self.conn.send(send_data)
 
 
 class FastScreenshots:
@@ -126,15 +127,19 @@ class StartServer(threading.Thread):
         self.port = port
         self.parent = parent
         self.seq = 0
+        self.conn = None
+        self.client_addr = None
 
     def run(self):
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind(('', self.port))
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.s.listen(5)
+        self.conn, self.client_addr = self.s.accept()
         """ implement three way handshake """
         # Wait for request
         while self.signal:
-            recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
+            recv = self.conn.recv(1024)
             recv = GSPHeader.from_buffer_copy(recv)
             if recv.type == 0 and recv.fn == 0:
                 break
@@ -142,16 +147,16 @@ class StartServer(threading.Thread):
         # Got request, send response
         packet = GSPHeader(self.seq, 0, 1, 0, False, time.time())
         self.seq += 1
-        self.s.sendto(packet, (self.remote_host, self.remote_port))
+        self.conn.send(packet)
 
         # Wait for another response from client
         while self.signal:
-            recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
+            recv = self.conn.recv(1024)
             recv = GSPHeader.from_buffer_copy(recv)
             if recv.type == 0 and recv.fn == 2:
                 break
         """ end of three way handshake """
-        self.fs = FrameSegment(self.s, self.remote_host, self.remote_port)
+        self.fs = FrameSegment(self.s, self.remote_host, self.remote_port, self.conn)
         self.fs.start()
         self.parent.start_sig.emit()
         self.parent.logs.appendPlainText('server is running.')
