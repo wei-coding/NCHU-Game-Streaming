@@ -5,3 +5,4 @@ pyqt5
 pillow
 flask
 waitress
+pynput
