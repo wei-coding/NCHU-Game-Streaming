@@ -8,11 +8,6 @@ import turbojpeg
 from protocol import *
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
-import numpy as np
-
-
-def encode_jpeg(turbojpeg_inst, frame):
-    return turbojpeg_inst.encode(frame, quality=50)
 
 
 class FrameSegment(threading.Thread):
@@ -46,9 +41,8 @@ class FrameSegment(threading.Thread):
             self.frame += 1
             self.frame %= 256
             if img is not None:
-                dat = encode_jpeg(self.JPEG, img)
+                dat = self.JPEG.encode(img, quality=75)
 
-                # print(len(dat))
                 size = len(dat)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
@@ -60,9 +54,7 @@ class FrameSegment(threading.Thread):
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
-                    # time.sleep(10)
             else:
-                # print("Sleeping...")
                 time.sleep(0.01)
 
     def stop(self):

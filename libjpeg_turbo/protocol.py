@@ -29,7 +29,6 @@ class GSP:
     NONE = 0
 
 
-
 class GSPHeader(Structure):
     _fields_ = [
         ('seq', c_uint8),
