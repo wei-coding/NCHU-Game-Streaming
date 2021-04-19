@@ -1,7 +1,7 @@
 import socket
 import cv2
 import turbojpeg
-from protocol import *
+from .protocol import *
 import ctypes
 import time
 import traceback
