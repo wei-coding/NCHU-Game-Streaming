@@ -5,7 +5,7 @@ import time
 import cv2
 import d3dshot
 import turbojpeg
-from protocol import *
+from .protocol import *
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
 
