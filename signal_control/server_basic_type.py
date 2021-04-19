@@ -5,7 +5,7 @@ Created on Sat Mar  6 23:02:31 2021
 @author: leo
 """
 import json
-import protocol
+from libjpeg_turbo.protocol import *
 import socket
 
 from pynput import keyboard
@@ -57,7 +57,7 @@ def krelease(a):
 # socket connect
 
 
-HOST = '192.168.0.101'
+HOST = '0.0.0.0'
 PORT = 8000
 print("connecting")
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -67,54 +67,59 @@ conn, addr = server.accept()
 print("connect success")
 
 while True:
-
     try:
         clientMessage = (conn.recv(1024))
-        signal = json.loads(clientMessage)
+        # signal = json.loads(clientMessage)
+        signal = GSSPBody.from_buffer_copy(clientMessage)
+
         # print (clientMessage)
         print(signal)
-        if signal['0'] == 'mm':
-            mmove(int(signal['1']), int(signal['2']))
-        elif signal['0'] == 'mp':
-            mpress()
-        elif signal['0'] == 'mr':
-            mrelease()
-        elif signal['0'] == 'ms':
-            mscroll(int(signal['1']), int(signal['2']))
-        elif signal['0'] == 'kp':
-            if signal['1'] == 'up':
-                keyboard_control.press(keyboard.Key.up)
-            elif signal['1'] == 'down':
-                keyboard_control.press(keyboard.Key.down)
-            elif signal['1'] == 'left':
-                keyboard_control.press(keyboard.Key.left)
-                # pressing('left')
-            elif signal['1'] == 'right':
-                keyboard_control.press(keyboard.Key.right)
-                # pressing('right')
-            elif signal['1'] == 'enter':
-                keyboard_control.press(keyboard.Key.enter)
-                # pressing('enter')
-            else:
-                kpress(signal['1'])
-            # kpress(signal['1'])
-        elif signal['0'] == 'kr':
-            if signal['1'] == 'up':
-                keyboard_control.release(keyboard.Key.up)
-                # check_if_press.remove('up')
-            elif signal['1'] == 'down':
-                keyboard_control.release(keyboard.Key.down)
-                # check_if_press.remove('down')
-            elif signal['1'] == 'left':
-                keyboard_control.release(keyboard.Key.left)
-                # check_if_press.remove('left')
-            elif signal['1'] == 'right':
-                keyboard_control.release(keyboard.Key.right)
-                # check_if_press.remove('right')
-            elif signal['1'] == 'enter':
-                keyboard_control.release(keyboard.Key.enter)
-                # check_if_press.remove('enter')
-            else:
-                krelease((signal['1']))
+        if signal.type == GSSP.MOUSE:
+            if signal.action == GSSP.M:
+                mmove(signal.x, signal.y)
+            elif signal.action == GSSP.P:
+                mpress()
+            elif signal.action == GSSP.R:
+                mrelease()
+            elif signal.action == GSSP.S:
+                mscroll(signal.x, signal.y)
+        elif signal.type == GSSP.KEYBOARD:
+            if signal.action == GSSP.P:
+                if signal.special == GSSP.UP:
+                    keyboard_control.press(keyboard.Key.up)
+                elif signal.special == GSSP.DOWN:
+                    keyboard_control.press(keyboard.Key.down)
+                elif signal.special == GSSP.LEFT:
+                    keyboard_control.press(keyboard.Key.left)
+                    # pressing('left')
+                elif signal.special == GSSP.RIGHT:
+                    keyboard_control.press(keyboard.Key.right)
+                    # pressing('right')
+                elif signal.special == GSSP.ENTER:
+                    keyboard_control.press(keyboard.Key.enter)
+                    # pressing('enter')
+                else:
+                    btn = signal.btn.decode("utf-8")
+                    kpress(btn)
+                # kpress(signal['1'])
+            elif signal.action == GSSP.R:
+                if signal.special == GSSP.UP:
+                    keyboard_control.release(keyboard.Key.up)
+                    # check_if_press.remove('up')
+                elif signal.special == GSSP.DOWN:
+                    keyboard_control.release(keyboard.Key.down)
+                    # check_if_press.remove('down')
+                elif signal.special == GSSP.LEFT:
+                    keyboard_control.release(keyboard.Key.left)
+                    # check_if_press.remove('left')
+                elif signal.special == GSSP.RIGHT:
+                    keyboard_control.release(keyboard.Key.right)
+                    # check_if_press.remove('right')
+                elif signal.special == GSSP.ENTER:
+                    keyboard_control.release(keyboard.Key.enter)
+                    # check_if_press.remove('enter')
+                else:
+                    btn = signal.btn.decode("utf-8")
+                    krelease(btn)
     except:
         pass
