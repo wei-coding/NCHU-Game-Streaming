@@ -23,7 +23,7 @@ ax = 0
 bx = 0
 
 
-def mouse_Thread():
+def mouse_thread():
     # from pynput.mouse import Listener
 
     def on_move(x, y):
@@ -151,7 +151,7 @@ def keyboard_Thread():
 
 
 if __name__ == '__main__':
-    p1 = Thread(target=mouse_Thread)
+    p1 = Thread(target=mouse_thread)
     p1.start()
     p2 = Thread(target=keyboard_Thread)
     p2.start()
