@@ -83,4 +83,4 @@ class Ui_MainWindow(object):
         self.port_textedit.setPlaceholderText(_translate("MainWindow", "12345"))
         self.start_button.setText(_translate("MainWindow", "開始"))
         self.stop_button.setText(_translate("MainWindow", "停止"))
-from . import icons_rc
+import icons_rc

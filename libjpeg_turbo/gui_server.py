@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from . import sender
-from . import serverui as ui
+import sender
+import serverui as ui
 import webbrowser
 
 

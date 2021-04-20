@@ -52,11 +52,12 @@ class Receiver(threading.Thread):
             header = GSPHeader.from_buffer_copy(seg[:ctypes.sizeof(GSPHeader)])
             last = header.last
             seq = header.seq
+            '''print(f'seq: {seq}, self.seq: {self.seq}')
             if seq != self.seq + 1:
                 self.seq += 1
                 data = GSPHeader(seq=self.seq, type=GSP.CONTROL, fn=GSP.CONGESTION)
                 self.s.sendto(data, (self.server_ip, self.port))
-                continue
+                continue'''
             self.stop = (header.fn == GSP.STOP)
             payload = seg[ctypes.sizeof(GSPHeader):]
             dat += payload

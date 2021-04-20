@@ -16,7 +16,7 @@ class FrameSegment(threading.Thread):
     if the size of image exceed maximum datagram size
     """
     MAX_DGRAM = 2 ** 16
-    MAX_IMAGE_DGRAM = MAX_DGRAM >> 6  # extract 64 bytes in case UDP frame overflown
+    MAX_IMAGE_DGRAM = MAX_DGRAM >> 4  # extract 64 bytes in case UDP frame overflown
     JPEG = turbojpeg.TurboJPEG()
 
     def __init__(self, sock, addr, port):
@@ -42,10 +42,11 @@ class FrameSegment(threading.Thread):
             self.frame %= 256
             if img is not None:
                 dat = self.JPEG.encode(img, quality=70)
-
                 size = len(dat)
+                print(size)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
+                print(count)
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
