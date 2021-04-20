@@ -10,9 +10,8 @@ about GSPHeader:
             + 2: ACK for "ACK"
         + normal control:
             + 3: stop transmission
-        + partition control:
-            + 4: this partition is normal
-            + 5: repeation of partition, use old instead 
+        + congestion control:
+            + 4: can't catch up, lower the quality and frame rate 
     - frm: frame number
     - last: whether this is the last packet for the frame
     - timestamp: as it is
@@ -26,6 +25,7 @@ class GSP:
     SYN_ACK = 1
     ACK = 2
     STOP = 3
+    CONGESTION = 4
     NONE = 0
 
 

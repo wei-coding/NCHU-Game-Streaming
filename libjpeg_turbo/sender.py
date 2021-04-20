@@ -5,7 +5,7 @@ import time
 import cv2
 import d3dshot
 import turbojpeg
-from .protocol import *
+from protocol import *
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
 
@@ -41,7 +41,7 @@ class FrameSegment(threading.Thread):
             self.frame += 1
             self.frame %= 256
             if img is not None:
-                dat = self.JPEG.encode(img, quality=75)
+                dat = self.JPEG.encode(img, quality=70)
 
                 size = len(dat)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)

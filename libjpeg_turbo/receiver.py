@@ -1,7 +1,7 @@
 import socket
 import cv2
 import turbojpeg
-from .protocol import *
+from protocol import *
 import ctypes
 import time
 import traceback
@@ -20,7 +20,6 @@ class Receiver(threading.Thread):
         self.server_ip = server_ip
         self.port = port
         self.jpeg = turbojpeg.TurboJPEG()
-
 
     def run(self):
 
@@ -50,8 +49,14 @@ class Receiver(threading.Thread):
                 seg, addr = self.s.recvfrom(MAX_DGRAM)
             except KeyboardInterrupt:
                 break
-            header = GSPHeader.from_buffer_copy(seg)
+            header = GSPHeader.from_buffer_copy(seg[:ctypes.sizeof(GSPHeader)])
             last = header.last
+            seq = header.seq
+            if seq != self.seq + 1:
+                self.seq += 1
+                data = GSPHeader(seq=self.seq, type=GSP.CONTROL, fn=GSP.CONGESTION)
+                self.s.sendto(data, (self.server_ip, self.port))
+                continue
             self.stop = (header.fn == GSP.STOP)
             payload = seg[ctypes.sizeof(GSPHeader):]
             dat += payload
