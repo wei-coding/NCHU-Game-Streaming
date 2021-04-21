@@ -118,7 +118,7 @@ def dump_buffer(s):
 def main():
     """ Getting image udp frame &
     concate before decode and output image """
-    server_ip = '192.168.31.174'
+    server_ip = '192.168.0.101'
     port = 12345
     receiver = Receiver(server_ip, port)
     receiver.start()
