@@ -1,6 +1,8 @@
-from ctypes import *
 """
 about GSPHeader:
+
+* struct:
+
     - seq: sequance number
     - type: 0 for control, 1 for data
     - fn: only for control
@@ -11,11 +13,35 @@ about GSPHeader:
         + normal control:
             + 3: stop transmission
         + congestion control:
-            + 4: can't catch up, lower the quality and frame rate 
+            + 4: can't catch up, lower the quality
+            + 5: normal transmission for 10 frame, increase quality
     - frm: frame number
     - last: whether this is the last packet for the frame
     - timestamp: as it is
+
+about GSSPBody:
+    - type:
+        + 0: mouse
+        + 1: keyboard
+    - action:
+        + general:
+            + 0: press
+            + 1: release
+        + for mouse:
+            + 2: move
+            + 3: scroll
+    - x,y: for mouse
+    - btn: for keyboard
+    - special:
+        + 0: no use
+        + 1: up
+        + 2: down
+        + 3: left
+        + 4: right
+        + 5: enter
+        + 6: esc
 """
+from ctypes import *
 
 
 class GSP:
@@ -31,38 +57,13 @@ class GSP:
 
 class GSPHeader(Structure):
     _fields_ = [
-        ('seq', c_uint8),
+        ('seq', c_uint),
         ('type', c_uint8),
         ('fn', c_uint8),
         ('frm', c_uint8),
-        ('last', c_bool),
-        ('timestamp', c_float)
+        ('last', c_uint8),
+        ('timestamp', c_double)
     ]
-
-
-"""
-about GSSPBody:
-    - type: 
-        + 0: mouse
-        + 1: keyboard
-    - action:
-        + general:
-            + 0: press
-            + 1: release
-        + for mouse:
-            + 2: move
-            + 3: scroll
-    - x,y: for mouse
-    - btn: for keyboard
-    - spetcial: 
-        + 0: no use
-        + 1: up
-        + 2: down
-        + 3: left
-        + 4: right
-        + 5: enter
-        + 0: esc
-"""
 
 
 class GSSP:

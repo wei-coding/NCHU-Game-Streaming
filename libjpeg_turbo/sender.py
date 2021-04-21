@@ -16,7 +16,7 @@ class FrameSegment(threading.Thread):
     if the size of image exceed maximum datagram size
     """
     MAX_DGRAM = 2 ** 16
-    MAX_IMAGE_DGRAM = MAX_DGRAM >> 4  # extract 64 bytes in case UDP frame overflown
+    MAX_IMAGE_DGRAM = MAX_DGRAM >> 6  # extract 64 bytes in case UDP frame overflown
     JPEG = turbojpeg.TurboJPEG()
 
     def __init__(self, sock, addr, port):
@@ -41,7 +41,7 @@ class FrameSegment(threading.Thread):
             self.frame += 1
             self.frame %= 256
             if img is not None:
-                dat = self.JPEG.encode(img, quality=70)
+                dat = self.JPEG.encode(img, quality=50)
                 size = len(dat)
                 print(size)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
@@ -50,7 +50,7 @@ class FrameSegment(threading.Thread):
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    header = GSPHeader(self.seq, GSP.DATA, GSP.NONE, 0, True if count == 1 else False, time.time())
+                    header = GSPHeader(self.seq, GSP.DATA, GSP.NONE, 0, count, time.time())
                     send_data = bytes(header) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
@@ -61,7 +61,7 @@ class FrameSegment(threading.Thread):
     def stop(self):
         self.signal = False
         self.scn.stop()
-        send_data = GSPHeader(0, GSP.CONTROL, GSP.STOP, 0, True, time.time())
+        send_data = GSPHeader(0, GSP.CONTROL, GSP.STOP, 0, 1, time.time())
         self.s.sendto(send_data, (self.addr, self.port))
 
 
@@ -151,7 +151,7 @@ class StartServer(threading.Thread):
                 break
 
         # Got request, send response
-        packet = GSPHeader(self.seq, 0, 1, 0, False, time.time())
+        packet = GSPHeader(self.seq, 0, 1, 0, 0, time.time())
         self.seq += 1
         self.s.sendto(packet, (self.remote_host, self.remote_port))
 
