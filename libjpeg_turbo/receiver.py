@@ -27,7 +27,7 @@ class Receiver(threading.Thread):
         print('trying connect 0')
         while True:
             # send request message
-            packet = GSPHeader(self.seq, GSP.CONTROL, GSP.RQST_CONN, 0, False, time.time())
+            packet = GSPHeader(self.seq, GSP.CONTROL, GSP.RQST_CONN, 0, 0, time.time())
             self.s.sendto(packet, (self.server_ip, self.port))
             # wait for ACK
             print('trying connect 1')
@@ -37,7 +37,7 @@ class Receiver(threading.Thread):
                 break
         # send ACK to server
         print('trying connect 2')
-        packet = GSPHeader(self.seq, GSP.CONTROL, GSP.ACK, 0, False, time.time())
+        packet = GSPHeader(self.seq, GSP.CONTROL, GSP.ACK, 0, 0, time.time())
         self.s.sendto(packet, (self.server_ip, self.port))
         print('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
         """ end of three way handshake """
@@ -45,12 +45,14 @@ class Receiver(threading.Thread):
         dat = b''
         # dump_buffer(self.s)
         while not self.stop:
+            cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+            cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             try:
                 seg, addr = self.s.recvfrom(MAX_DGRAM)
             except KeyboardInterrupt:
                 break
             header = GSPHeader.from_buffer_copy(seg[:ctypes.sizeof(GSPHeader)])
-            last = header.last
+            last = (header.last == 1)
             seq = header.seq
             '''print(f'seq: {seq}, self.seq: {self.seq}')
             if seq != self.seq + 1:
@@ -69,7 +71,7 @@ class Receiver(threading.Thread):
                     traceback.print_exc()
                 if img is not None:
                     cv2.namedWindow('frame', cv2.WINDOW_FULLSCREEN)
-                    cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+                    # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                     cv2.imshow('frame', img)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
