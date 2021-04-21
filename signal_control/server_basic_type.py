@@ -179,61 +179,62 @@ def main():
             clientMessage = (conn.recv(1024))
             # signal = json.loads(clientMessage)
             signal = GSSPBody.from_buffer_copy(clientMessage)
-
-            # print (clientMessage)
-            print(signal)
-            if signal.type == GSSP.MOUSE:
-                if signal.action == GSSP.M:
-                    mmove(mouse_control, signal.x, signal.y)
-                elif signal.action == GSSP.P:
-                    mpress(mouse_control)
-                elif signal.action == GSSP.R:
-                    mrelease(mouse_control)
-                elif signal.action == GSSP.S:
-                    mscroll(mouse_control, signal.x, signal.y)
-            elif signal.type == GSSP.KEYBOARD:
-                if signal.action == GSSP.P:
-                    if signal.special == GSSP.UP:
-                        keyboard_control.press(keyboard.Key.up)
-                    elif signal.special == GSSP.DOWN:
-                        keyboard_control.press(keyboard.Key.down)
-                    elif signal.special == GSSP.LEFT:
-                        keyboard_control.press(keyboard.Key.left)
-                        # pressing('left')
-                    elif signal.special == GSSP.RIGHT:
-                        keyboard_control.press(keyboard.Key.right)
-                        # pressing('right')
-                    elif signal.special == GSSP.ENTER:
-                        keyboard_control.press(keyboard.Key.enter)
-                        # pressing('enter')
-                    else:
-                        btn = signal.btn.decode("utf-8")
-                        kpress(keyboard_control, btn)
-                    # kpress(signal['1'])
-                elif signal.action == GSSP.R:
-                    if signal.special == GSSP.UP:
-                        keyboard_control.release(keyboard.Key.up)
-                        # check_if_press.remove('up')
-                    elif signal.special == GSSP.DOWN:
-                        keyboard_control.release(keyboard.Key.down)
-                        # check_if_press.remove('down')
-                    elif signal.special == GSSP.LEFT:
-                        keyboard_control.release(keyboard.Key.left)
-                        # check_if_press.remove('left')
-                    elif signal.special == GSSP.RIGHT:
-                        keyboard_control.release(keyboard.Key.right)
-                        # check_if_press.remove('right')
-                    elif signal.special == GSSP.ENTER:
-                        keyboard_control.release(keyboard.Key.enter)
-                        # check_if_press.remove('enter')
-                    else:
-                        btn = signal.btn.decode("utf-8")
-                        krelease(keyboard_control, btn)
         except:
             traceback.print_exc()
+            continue
+            # print (clientMessage)
+        print(signal)
+        if signal.type == GSSP.MOUSE:
+            if signal.action == GSSP.M:
+                mmove(mouse_control, signal.x, signal.y)
+            elif signal.action == GSSP.P:
+                mpress(mouse_control)
+            elif signal.action == GSSP.R:
+                mrelease(mouse_control)
+            elif signal.action == GSSP.S:
+                mscroll(mouse_control, signal.x, signal.y)
+        elif signal.type == GSSP.KEYBOARD:
+            if signal.action == GSSP.P:
+                if signal.special == GSSP.UP:
+                    keyboard_control.press(keyboard.Key.up)
+                elif signal.special == GSSP.DOWN:
+                    keyboard_control.press(keyboard.Key.down)
+                elif signal.special == GSSP.LEFT:
+                    keyboard_control.press(keyboard.Key.left)
+                    # pressing('left')
+                elif signal.special == GSSP.RIGHT:
+                    keyboard_control.press(keyboard.Key.right)
+                    # pressing('right')
+                elif signal.special == GSSP.ENTER:
+                    keyboard_control.press(keyboard.Key.enter)
+                    # pressing('enter')
+                else:
+                    btn = signal.btn.decode("utf-8")
+                    kpress(keyboard_control, btn)
+                # kpress(signal['1'])
+            elif signal.action == GSSP.R:
+                if signal.special == GSSP.UP:
+                    keyboard_control.release(keyboard.Key.up)
+                    # check_if_press.remove('up')
+                elif signal.special == GSSP.DOWN:
+                    keyboard_control.release(keyboard.Key.down)
+                    # check_if_press.remove('down')
+                elif signal.special == GSSP.LEFT:
+                    keyboard_control.release(keyboard.Key.left)
+                    # check_if_press.remove('left')
+                elif signal.special == GSSP.RIGHT:
+                    keyboard_control.release(keyboard.Key.right)
+                    # check_if_press.remove('right')
+                elif signal.special == GSSP.ENTER:
+                    keyboard_control.release(keyboard.Key.enter)
+                    # check_if_press.remove('enter')
+                else:
+                    btn = signal.btn.decode("utf-8")
+                    krelease(keyboard_control, btn)
+
 
 
 if __name__ == '__main__':
-    s = ServerSide(8000)
+    s = ServerSide(8001)
     s.start()
     s.join()

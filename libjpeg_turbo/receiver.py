@@ -69,6 +69,7 @@ class Receiver(threading.Thread):
                     traceback.print_exc()
                 if img is not None:
                     cv2.namedWindow('frame', cv2.WINDOW_FULLSCREEN)
+                    cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                     cv2.imshow('frame', img)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
@@ -95,7 +96,7 @@ def dump_buffer(s):
 def main():
     """ Getting image udp frame &
     concate before decode and output image """
-    server_ip = '192.168.31.174'
+    server_ip = '192.168.0.101'
     port = 12345
     receiver = Receiver(server_ip, port)
     receiver.start()
