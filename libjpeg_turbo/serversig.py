@@ -15,19 +15,21 @@ from libjpeg_turbo.protocol import *
 
 
 class ServerSide(threading.Thread):
-    def __init__(self, port):
+    def __init__(self, port, parent=None):
         threading.Thread.__init__(self)
-        print("connecting")
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(('0.0.0.0', port))
-        server.listen(10)
-        self.conn, self.addr = server.accept()
-        print("connect success")
-
-        self.mouse_control = mouse.Controller()
-        self.keyboard_control = keyboard.Controller()
+        self.parent = parent
+        self.port = port
 
     def run(self):
+        self.parent.logs.appendPlainText("Keyboard/Mouse system connecting")
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.bind(('0.0.0.0', self.port))
+        server.listen(10)
+        self.conn, self.addr = server.accept()
+
+        self.parent.logs.appendPlainText("Keyboard/Mouse connect success")
+        self.mouse_control = mouse.Controller()
+        self.keyboard_control = keyboard.Controller()
         while True:
             signal = None
             try:
@@ -78,24 +80,24 @@ class ServerSide(threading.Thread):
 
     def mmove(self, x, y):
         self.mouse_control.position = (x, y)
-        print(self.mouse_control.position)
+        self.parent.logs.appendPlainText(f'Keyboard/Mouse: {self.mouse_control.position}')
 
     def mpress(self):
         self.mouse_control.press(mouse.Button.left)
-        print('mouse has press')
+        self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has press')
 
     def mrelease(self):
         self.mouse_control.release(mouse.Button.left)
-        print('mouse has release')
+        self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has release')
 
     def mscroll(self, x, y):
         self.mouse_control.scroll(x, y)
-        print('mouse scroll')
+        self.parent.logs.appendPlainText('Keyboard/Mouse: mouse scroll')
 
     def kpress(self, a):
         self.keyboard_control.press(a)
-        print('keyboard press', a)
+        self.parent.logs.appendPlainText(f'Keyboard/Mouse: keyboard press {a}')
 
     def krelease(self, a):
         self.keyboard_control.release(a)
-        print('keyboard release', a)
+        self.parent.logs.appendPlainText(f'Keyboard/Mouse: keyboard release {a}')

@@ -50,7 +50,7 @@ class Receiver(threading.Thread):
         # dump_buffer(self.s)
         while not self.stop:
             cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-            cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             try:
                 seg, addr = self.s.recvfrom(MAX_DGRAM)
             except KeyboardInterrupt:

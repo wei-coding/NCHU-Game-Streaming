@@ -13,16 +13,18 @@ from pynput.mouse import Listener
 
 
 class ClientSide(threading.Thread):
-    def __init__(self, server_ip, port):
+    def __init__(self, server_ip, port, parent):
         threading.Thread.__init__(self)
         self.server_ip = server_ip
         self.port = port
+        self.parent = parent
         self.mouse_thread = MouseThread(self)
         self.keyboard_thread = KeyboardThread(self)
-        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect((server_ip, port))
+        self.client = None
 
     def run(self):
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client.connect((self.server_ip, self.port))
         self.mouse_thread.start()
         self.keyboard_thread.start()
         self.mouse_thread.join()
