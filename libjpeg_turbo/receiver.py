@@ -6,6 +6,7 @@ import ctypes
 import time
 import traceback
 import threading
+import struct
 
 
 MAX_DGRAM = 2 ** 16
@@ -21,6 +22,7 @@ class Receiver(threading.Thread):
         self.server_ip = server_ip
         self.port = port
         self.jpeg = turbojpeg.TurboJPEG()
+        self.geo = None
 
     def run(self):
 
@@ -45,12 +47,19 @@ class Receiver(threading.Thread):
         else:
             print('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
         """ end of three way handshake """
+        """ res """
+        while True:
+            recv, addr = self.s.recvfrom(MAX_DGRAM)
+            header = GSPHeader.from_buffer_copy(recv[:sizeof(GSPHeader)])
+            if header.type == GSP.RES:
+                self.geo = struct.unpack('II', recv[sizeof(GSPHeader):])
+                print(self.geo)
+                break
+        """ end of res """
         img = None
         dat = b''
         # dump_buffer(self.s)
         while not self.stop:
-            cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-            # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             try:
                 seg, addr = self.s.recvfrom(MAX_DGRAM)
             except KeyboardInterrupt:
@@ -75,7 +84,7 @@ class Receiver(threading.Thread):
                 except Exception:
                     traceback.print_exc()
                 if img is not None:
-                    cv2.namedWindow('frame', cv2.WINDOW_FULLSCREEN)
+                    cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
                     # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                     cv2.imshow('frame', img)
                 if cv2.waitKey(1) & 0xFF == ord('q'):

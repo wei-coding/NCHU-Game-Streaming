@@ -26,8 +26,9 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         server_ip = self.serverip_textedit.toPlainText()
         port = self.port_textedit.toPlainText()
         if server_ip == '':
-            self.logs.appendPlainText('Wrong server ip! Please retry.')
-            return
+            # self.logs.appendPlainText('Wrong server ip! Please retry.')
+            # return
+            server_ip = '192.168.0.101'
         if port == '':
             port = 12345
         else:
@@ -42,6 +43,7 @@ class Main(QMainWindow, ui.Ui_MainWindow):
 
     def stop_button_clicked(self):
         self.service.kill()
+        self.signal_service.kill()
         self.start_button.setEnabled(True)
         self.stop_button.setEnabled(False)
 
@@ -56,6 +58,7 @@ class ClientService(QThread):
         self.port = port
         self.parent = parent
         self.service = receiver.Receiver(server_ip, port, parent)
+        self.geo = None
 
     def run(self):
         self.service.start()
@@ -70,13 +73,14 @@ class KeyboardMouse(QThread):
         self.server_ip = server_ip
         self.port = port
         self.service = None
+        self.parent = parent
 
     def run(self):
         self.service = clientsig.ClientSide(self.server_ip, self.port, self)
         self.service.start()
 
     def kill(self):
-        self.service.stop()
+        self.service.kill()
 
 
 if __name__ == "__main__":

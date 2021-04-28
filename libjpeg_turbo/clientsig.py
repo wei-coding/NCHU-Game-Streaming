@@ -48,23 +48,26 @@ class MouseThread(threading.Thread):
             listener.join()
 
     def on_move(self, x, y):
-        print('Pointer moved to {0}'.format((x, y)))
+        # print('Pointer moved to {0}'.format((x, y)))
+        x = x * 1680 // 1920
+        y = y * 1050 // 1080
         data = GSSPBody(GSSP.MOUSE, GSSP.M, x, y, GSSP.NO_BTN, 0)
         self.parent.client.send(data)
 
     def on_click(self, x, y, button, pressed):
-        print('{0} at {1}'.format(
-            'Pressed' if pressed else 'Released',
-            (x, y)))
-        print(button)
-        data = GSSPBody(GSSP.MOUSE, GSSP.P, x, y, GSSP.NO_BTN, 0)
-        self.parent.client.send(data)
+        x = x * 1680 // 1920
+        y = y * 1050 // 1080
+        print('{0} at {1}'.format(pressed, (x, y)))
+        # print(button)
         if not pressed:
             data = GSSPBody(GSSP.MOUSE, GSSP.R, x, y, GSSP.NO_BTN, 0)
             self.parent.client.send(data)
+        else:
+            data = GSSPBody(GSSP.MOUSE, GSSP.P, x, y, GSSP.NO_BTN, 0)
+            self.parent.client.send(data)
 
     def on_scroll(self, x, y, dx, dy):
-        print('Scrolled ', x, y, dx, dy)
+        # print('Scrolled ', x, y, dx, dy)
         data = GSSPBody(GSSP.MOUSE, GSSP.S, dx, dy, GSSP.NO_BTN, 0)
         self.parent.client.send(data)
 
@@ -86,7 +89,6 @@ class KeyboardThread(threading.Thread):
             print('alphanumeric key {0} pressed'.format(key.char))
             data = GSSPBody(GSSP.KEYBOARD, GSSP.P, 0, 0, bytes(key.char, encoding='utf-8'), 0)
             self.parent.client.send(data)
-
         except AttributeError:
             print('special key {0} pressed'.format(key))
             print(key)
@@ -109,7 +111,7 @@ class KeyboardThread(threading.Thread):
         try:
             data = GSSPBody(GSSP.KEYBOARD, GSSP.R, 0, 0, bytes(key.char, encoding='utf-8'), 0)
             self.parent.client.send(data)
-            print('get', key.char)
+            print('{0} released'.format(key.char))
         except Exception:
             if key == keyboard.Key.esc:
                 data = GSSPBody(GSSP.KEYBOARD, GSSP.R, 0, 0, GSSP.NO_BTN, GSSP.ESC)
@@ -124,5 +126,5 @@ class KeyboardThread(threading.Thread):
                 keyboard.Key.right: GSSP.RIGHT,
                 keyboard.Key.enter: GSSP.ENTER,
             }
-            data = GSSPBody(GSSP.KEYBOARD, GSSP.R, 0, 0, 0, bytes(switch[key]))
+            data = GSSPBody(GSSP.KEYBOARD, GSSP.R, 0, 0, 0, switch[key])
             self.parent.client.send(data)
