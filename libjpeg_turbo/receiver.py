@@ -22,6 +22,7 @@ class Receiver(threading.Thread):
         self.server_ip = server_ip
         self.port = port
         self.jpeg = turbojpeg.TurboJPEG()
+        self.geo = None
 
     def run(self):
         """ implement three way handshake """
@@ -60,8 +61,6 @@ class Receiver(threading.Thread):
         dat = b''
         dump_buffer(self.s)
         while not self.stop:
-            cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-            # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             try:
                 seg, addr = self.s.recvfrom(GSP.PACKET_SIZE)
             except KeyboardInterrupt:
@@ -85,7 +84,7 @@ class Receiver(threading.Thread):
                 except Exception:
                     traceback.print_exc()
                 if img is not None:
-                    cv2.namedWindow('frame', cv2.WINDOW_FULLSCREEN)
+                    cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
                     # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                     cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
                     cv2.imshow('frame', img)
