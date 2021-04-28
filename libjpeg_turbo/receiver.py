@@ -82,6 +82,7 @@ class Receiver(threading.Thread):
                 dat = b''
         if self.parent:
             self.parent.logs.appendHtml("stop connecttion")
+            self.parent.signal_service.kill()
         else:
             print('Server has stopped.')
         cv2.destroyAllWindows()

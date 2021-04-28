@@ -7,17 +7,19 @@ about GSPHeader:
     - type: 0 for control, 1 for data
     - fn: only for control
         + three way handshake:
-            + 0: request for connection
-            + 1: same of "SYN,ACK", means got request
-            + 2: ACK for "ACK"
+            + 0000b: request for connection
+            + 0001b: same of "SYN,ACK", means got request
+            + 0010b: ACK for "ACK"
         + normal control:
-            + 3: stop transmission
+            + 0011b: stop transmission
         + congestion control:
-            + 4: can't catch up, lower the quality
-            + 5: normal transmission for 10 frame, increase quality
+            + 0100b: can't catch up, lower the quality
+            + 0101b: normal transmission for 10 frame, increase quality
+            + 0110b: got it, lower the quality
+            + 0111b: got it, increase quality
         + screen resolution check:
-            + 6: send resolution
-            + 7: ACK for resolution check
+            + 1000b: send resolution
+            + 1001b: ACK for resolution check
     - frm: frame number
     - last: whether this is the last packet for the frame
     - timestamp: as it is
@@ -26,6 +28,7 @@ about GSSPBody:
     - type:
         + 0: mouse
         + 1: keyboard
+        + 2: control
     - action:
         + general:
             + 0: press
@@ -33,6 +36,8 @@ about GSSPBody:
         + for mouse:
             + 2: move
             + 3: scroll
+        + for control:
+            + 4: stop
     - x,y: for mouse
     - btn: for keyboard
     - special:
@@ -85,6 +90,8 @@ class GSSP:
     ENTER = 5
     ESC = 6
     NO_BTN = b'\0'
+    CTRL = 2
+    STOP = 4
 
 
 class GSSPBody(Structure):
