@@ -6,6 +6,7 @@ from PyQt5.QtGui import *
 import sender
 import serverui as ui
 import webbrowser
+import serversig
 
 
 class Main(QMainWindow, ui.Ui_MainWindow):
@@ -24,6 +25,7 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         self.iptool = IpService(self.ip, self)
         self.iptool.start()
         self.iptool.finished.connect(self.show_my_ip)
+        self.signal_service = None
         self.stop_sig.connect(self.after_server_stop)
         self.start_sig.connect(self.after_server_start)
 
@@ -35,11 +37,15 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         port = self.port_textedit.toPlainText()
         if port == '':
             self.server = sender.StartServer(parent=self)
+            self.signal_service = KeyboardMouse(parent=self)
         else:
             self.server = sender.StartServer(int(port), self)
+            self.signal_service = KeyboardMouse(int(port)+1, parent=self)
         self.server_thread = ServerService(self.cli_addr, self.server, self)
         self.server_thread.start()
         self.server_thread.finished.connect(self.client_connected)
+        self.signal_service.start()
+
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(False)
 
@@ -108,6 +114,19 @@ class IpService(QThread):
         finally:
             s.close()
         self.ret.append(ip)
+
+
+class KeyboardMouse(QThread):
+    def __init__(self, port=12346, parent=None):
+        QThread.__init__(self, parent=parent)
+        self.service = None
+        self.port = port
+        self.parent = parent
+
+    def run(self):
+        self.service = serversig.ServerSide(self.port, self.parent)
+        self.service.start()
+        self.service.join()
 
 
 if __name__ == "__main__":

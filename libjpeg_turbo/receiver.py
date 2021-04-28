@@ -12,8 +12,9 @@ MAX_DGRAM = 2 ** 16
 
 
 class Receiver(threading.Thread):
-    def __init__(self, server_ip, port):
+    def __init__(self, server_ip, port, parent=None):
         threading.Thread.__init__(self)
+        self.parent = parent
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.stop = False
         self.seq = 0
@@ -39,14 +40,17 @@ class Receiver(threading.Thread):
         print('trying connect 2')
         packet = GSPHeader(self.seq, GSP.CONTROL, GSP.ACK, 0, 0, time.time())
         self.s.sendto(packet, (self.server_ip, self.port))
-        print('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
+        if self.parent:
+            self.parent.logs.appendHtml('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
+        else:
+            print('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
         """ end of three way handshake """
         img = None
         dat = b''
         # dump_buffer(self.s)
         while not self.stop:
             cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-            cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             try:
                 seg, addr = self.s.recvfrom(MAX_DGRAM)
             except KeyboardInterrupt:
@@ -65,6 +69,7 @@ class Receiver(threading.Thread):
             dat += payload
             if last:
                 dat += payload
+
                 try:
                     img = self.jpeg.decode(dat)
                 except Exception:
@@ -76,7 +81,10 @@ class Receiver(threading.Thread):
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
                 dat = b''
-        print('Server has stopped.')
+        if self.parent:
+            self.parent.logs.appendHtml("stop connecttion")
+        else:
+            print('Server has stopped.')
         cv2.destroyAllWindows()
         self.s.close()
 
