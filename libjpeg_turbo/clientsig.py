@@ -30,6 +30,9 @@ class ClientSide(threading.Thread):
         self.mouse_thread.join()
         self.keyboard_thread.join()
 
+    def kill(self):
+        self.join(0)
+
 
 class MouseThread(threading.Thread):
     def __init__(self, parent):

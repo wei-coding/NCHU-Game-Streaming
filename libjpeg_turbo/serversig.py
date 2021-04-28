@@ -19,10 +19,12 @@ class ServerSide(threading.Thread):
         threading.Thread.__init__(self)
         self.parent = parent
         self.port = port
+        self.stop = False
 
     def run(self):
         self.parent.logs.appendPlainText("Keyboard/Mouse system connecting")
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind(('0.0.0.0', self.port))
         server.listen(10)
         self.conn, self.addr = server.accept()
@@ -30,7 +32,7 @@ class ServerSide(threading.Thread):
         self.parent.logs.appendPlainText("Keyboard/Mouse connect success")
         self.mouse_control = mouse.Controller()
         self.keyboard_control = keyboard.Controller()
-        while True:
+        while not self.stop:
             signal = None
             try:
                 clientMessage = (self.conn.recv(1024))
@@ -101,3 +103,6 @@ class ServerSide(threading.Thread):
     def krelease(self, a):
         self.keyboard_control.release(a)
         self.parent.logs.appendPlainText(f'Keyboard/Mouse: keyboard release {a}')
+
+    def kill(self):
+        self.stop = True

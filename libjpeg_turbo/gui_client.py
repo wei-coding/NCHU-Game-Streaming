@@ -75,6 +75,9 @@ class KeyboardMouse(QThread):
         self.service = clientsig.ClientSide(self.server_ip, self.port, self)
         self.service.start()
 
+    def kill(self):
+        self.service.stop()
+
 
 if __name__ == "__main__":
     import sys

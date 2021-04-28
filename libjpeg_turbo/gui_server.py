@@ -128,6 +128,9 @@ class KeyboardMouse(QThread):
         self.service.start()
         self.service.join()
 
+    def stop(self):
+        self.service.kill()
+
 
 if __name__ == "__main__":
     import sys
