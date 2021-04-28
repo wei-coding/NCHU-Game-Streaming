@@ -41,7 +41,7 @@ class FrameSegment(threading.Thread):
             self.frame += 1
             self.frame %= 256
             if img is not None:
-                dat = self.JPEG.encode(img, quality=50)
+                dat = self.JPEG.encode(img, quality=70)
                 size = len(dat)
                 print(size)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
@@ -162,6 +162,8 @@ class StartServer(threading.Thread):
             if recv.type == 0 and recv.fn == 2:
                 break
         """ end of three way handshake """
+        """ send screen resolution """
+        packet = GSPHeader(self.seq, 0, 1,)
         self.fs = FrameSegment(self.s, self.remote_host, self.remote_port)
         self.fs.start()
         self.parent.start_sig.emit()

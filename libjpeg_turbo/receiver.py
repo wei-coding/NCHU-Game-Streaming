@@ -69,6 +69,7 @@ class Receiver(threading.Thread):
             dat += payload
             if last:
                 dat += payload
+
                 try:
                     img = self.jpeg.decode(dat)
                 except Exception:

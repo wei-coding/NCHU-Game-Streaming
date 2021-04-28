@@ -15,6 +15,9 @@ about GSPHeader:
         + congestion control:
             + 4: can't catch up, lower the quality
             + 5: normal transmission for 10 frame, increase quality
+        + screen resolution check:
+            + 6: send resolution
+            + 7: ACK for resolution check
     - frm: frame number
     - last: whether this is the last packet for the frame
     - timestamp: as it is
@@ -52,6 +55,8 @@ class GSP:
     ACK = 2
     STOP = 3
     CONGESTION = 4
+    RES = 6
+    RES_ACK = 7
     NONE = 0
 
 

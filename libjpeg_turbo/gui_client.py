@@ -15,6 +15,8 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         self.start_button.clicked.connect(self.start_button_clicked)
         self.stop_button.clicked.connect(self.stop_button_clicked)
         self.write_welcome_message()
+        self.start_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
         self.about_button.clicked.connect(lambda: webbrowser.open('https://github.com/wei-coding/Game-Streaming-Nchu'))
 
         self.service = None
@@ -23,6 +25,9 @@ class Main(QMainWindow, ui.Ui_MainWindow):
     def start_button_clicked(self):
         server_ip = self.serverip_textedit.toPlainText()
         port = self.port_textedit.toPlainText()
+        if server_ip == '':
+            self.logs.appendPlainText('Wrong server ip! Please retry.')
+            return
         if port == '':
             port = 12345
         else:
@@ -32,9 +37,13 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         self.service.start()
         self.signal_service = KeyboardMouse(server_ip, port+1, self)
         self.signal_service.start()
+        self.start_button.setEnabled(False)
+        self.stop_button.setEnabled(True)
 
     def stop_button_clicked(self):
         self.service.kill()
+        self.start_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
 
     def write_welcome_message(self):
         self.logs.appendPlainText('Welcome to GameStreaming Server!')
