@@ -6,14 +6,8 @@ import cv2
 import d3dshot
 import turbojpeg
 from protocol import *
-import ctypes
-import struct
-from numba import jit
-
-
-@jit
-def encode_jpeg(turbojpeg_inst, frame):
-    return turbojpeg_inst.encode(frame, quality=70)
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import *
 
 
 class FrameSegment(threading.Thread):
@@ -21,14 +15,15 @@ class FrameSegment(threading.Thread):
     Object to break down image frame segment
     if the size of image exceed maximum datagram size
     """
-    MAX_DGRAM = 2 ** 16 - 64
-    MAX_IMAGE_DGRAM = MAX_DGRAM - 64  # extract 64 bytes in case UDP frame overflown
+    MAX_DGRAM = 2 ** 16
+    MAX_IMAGE_DGRAM = MAX_DGRAM >> 6  # extract 64 bytes in case UDP frame overflown
     JPEG = turbojpeg.TurboJPEG()
 
     def __init__(self, sock, addr, port):
         threading.Thread.__init__(self)
         self.s = sock
         self.scn = FastScreenshots()
+        # self.scn = QtScreenShot()
         self.signal = True
         self.seq = -1
         self.frame = -1
@@ -44,35 +39,55 @@ class FrameSegment(threading.Thread):
         while self.signal:
             sucess, img = self.scn.get_latest_frame()
             self.frame += 1
+            self.frame %= 256
             if img is not None:
-                dat = encode_jpeg(self.JPEG, img)
+                dat = self.JPEG.encode(img, quality=70)
                 size = len(dat)
+                print(size)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
-                now = time.time()
+                print(count)
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-                    send_data = struct.pack("!?", True if count == 1 else False) + dat[array_pos_start:array_pos_end]
+                    header = GSPHeader(self.seq, GSP.DATA, GSP.NONE, 0, count, time.time())
+                    send_data = bytes(header) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
-                    # time.sleep(10)
             else:
-                # print("Sleeping...")
                 time.sleep(0.01)
 
     def stop(self):
         self.signal = False
         self.scn.stop()
+        send_data = GSPHeader(0, GSP.CONTROL, GSP.STOP, 0, 1, time.time())
+        self.s.sendto(send_data, (self.addr, self.port))
+
+
+class BufferClearService(threading.Thread):
+    def __init__(self, buffer):
+        threading.Thread.__init__(self)
+        self.buffer = buffer
+        self.sig = False
+
+    def run(self):
+        while not self.sig:
+            time.sleep(1)
+            self.buffer.clear()
+
+    def stop(self):
+        self.sig = not self.sig
 
 
 class FastScreenshots:
     def __init__(self):
-        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=120)
+        self.d = d3dshot.create(capture_output='numpy', frame_buffer_size=90)
+        self.clear_service = BufferClearService(self.d.frame_buffer)
 
     def start(self):
         self.d.capture(target_fps=60)
+        self.clear_service.start()
 
     def get_latest_frame(self):
         frame = self.d.get_latest_frame()
@@ -83,6 +98,32 @@ class FastScreenshots:
 
     def stop(self):
         self.d.stop()
+        self.clear_service.stop()
+
+
+class QtScreenShot(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.sig = False
+        self.screen = QtWidgets.QApplication.primaryScreen()
+        self._array = QByteArray()
+        self._buffer = QBuffer(self._array)
+        self._buffer.open(QIODevice.WriteOnly)
+
+    def run(self):
+        while not self.sig:
+            frame = self.screen.grabWindow(QtWidgets.QApplication.desktop().winId())
+            frame = frame.scaled(1280, 720, transformMode=Qt.SmoothTransformation)
+            frame.save(self._buffer, 'jpeg', quality=80)
+
+    def get_latest_frame(self):
+        pixData = self._buffer.data()
+        self._array.clear()
+        self._buffer.close()
+        return False if pixData is None else True, pixData
+
+    def stop(self):
+        self.sig = not self.sig
 
 
 class StartServer(threading.Thread):
@@ -105,22 +146,24 @@ class StartServer(threading.Thread):
         # Wait for request
         while self.signal:
             recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
-            recv = GSCPHeader.from_buffer_copy(recv)
-            if recv.type == b'I' and recv.fn == b'R':
+            recv = GSPHeader.from_buffer_copy(recv)
+            if recv.type == 0 and recv.fn == 0:
                 break
 
         # Got request, send response
-        packet = GSCPHeader(self.seq, b'I', b'A', time.time())
+        packet = GSPHeader(self.seq, 0, 1, 0, 0, time.time())
         self.seq += 1
         self.s.sendto(packet, (self.remote_host, self.remote_port))
 
         # Wait for another response from client
         while self.signal:
             recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
-            recv = GSCPHeader.from_buffer_copy(recv)
-            if recv.type == b'I' and recv.fn == b'A':
+            recv = GSPHeader.from_buffer_copy(recv)
+            if recv.type == 0 and recv.fn == 2:
                 break
         """ end of three way handshake """
+        """ send screen resolution """
+        packet = GSPHeader(self.seq, 0, 1,)
         self.fs = FrameSegment(self.s, self.remote_host, self.remote_port)
         self.fs.start()
         self.parent.start_sig.emit()
@@ -140,28 +183,7 @@ class StartServer(threading.Thread):
 
 
 def main():
-    """ Top level main function """
-    # Set up UDP socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    port = 12345
-    s.bind(('', port))
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-    revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    while revcData != b'R':
-        revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    s.sendto(b'A', (remoteHost, remotePort))
-    revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    while revcData != b'A':
-        revcData, (remoteHost, remotePort) = s.recvfrom(1024)
-    fs = FrameSegment(s, remoteHost, remotePort)
-    fs.start()
-    try:
-        while True:
-            time.sleep(2)
-    except KeyboardInterrupt:
-        fs.stop()
-    s.close()
+    pass
 
 
 if __name__ == "__main__":

@@ -4,7 +4,6 @@ Created on Sat Mar  6 23:02:31 2021
 
 @author: leo
 """
-#test
 import time
 from pynput.keyboard import Key, Controller
 keyboard_control = Controller()
@@ -44,7 +43,7 @@ def kpress(a):
 def krelease(a):
     keyboard_control.release(a)
     print('keyboard release',a)
-    check_if_press.remove(a)
+    check_if_press['get'].remove(a)
     
     
     
@@ -67,56 +66,53 @@ print("connect success")
 while True:
     #count+=1
     #print(time.time())
-    try:
-        clientMessage = (conn.recv(1024))
-        signal=json.loads(clientMessage)
-        #print (clientMessage)
-        print(signal)
-        if signal['0']=='mm':
-            mmove(int(signal['1']),int(signal['2']))
-        elif signal['0']=='mp':
-            mpress()
-        elif signal['0']=='mr':
-            mrelease()
-        elif signal['0']=='ms':
-            mscroll(int(signal['1']), int(signal['2']))
-        elif signal['0']=='kp':
-            if signal['1']=='up':
-                keyboard_control.press(keyboard.Key.up)       
-            elif signal['1']=='down':
-                keyboard_control.press(keyboard.Key.down)         
-            elif signal['1']=='left':
-                keyboard_control.press(keyboard.Key.left)
-                #pressing('left')
-            elif signal['1']=='right':
-                keyboard_control.press(keyboard.Key.right)
-                #pressing('right')
-            elif signal['1']=='enter':
-                keyboard_control.press(keyboard.Key.enter)
-                #pressing('enter')
-            else :   
-                kpress(signal['1'])
-            #kpress(signal['1'])            
-        elif signal['0']=='kr':
-            if signal['1']=='up':
-                keyboard_control.release(keyboard.Key.up)
-                check_if_press.remove('up')
-            elif signal['1']=='down':
-                keyboard_control.release(keyboard.Key.down)
-                check_if_press.remove('down')
-            elif signal['1']=='left':
-                keyboard_control.release(keyboard.Key.left)
-                check_if_press.remove('left')
-            elif signal['1']=='right':
-                keyboard_control.release(keyboard.Key.right)
-                check_if_press.remove('right')
-            elif signal['1']=='enter':
-                keyboard_control.release(keyboard.Key.enter)
-                check_if_press.remove('enter')
-            else:
-                krelease((signal['1']))
-    except:
-        pass
+    clientMessage = (conn.recv(1024))
+    signal=json.loads(clientMessage)
+    #print (clientMessage)
+    print(signal)
+    if signal['0']=='mm':
+        mmove(int(signal['1']),int(signal['2']))
+    elif signal['0']=='mp':
+        mpress()
+    elif signal['0']=='mr':
+        mrelease()
+    elif signal['0']=='ms':
+        mscroll(int(signal['1']), int(signal['2']))
+    elif signal['0']=='kp':
+        if signal['1']=='up':
+            keyboard_control.press(keyboard.Key.up)       
+        elif signal['1']=='down':
+            keyboard_control.press(keyboard.Key.down)         
+        elif signal['1']=='left':
+            keyboard_control.press(keyboard.Key.left)
+            #pressing('left')
+        elif signal['1']=='right':
+            keyboard_control.press(keyboard.Key.right)
+            #pressing('right')
+        elif signal['1']=='enter':
+            keyboard_control.press(keyboard.Key.enter)
+            #pressing('enter')
+        else :   
+            kpress(signal['1'])
+        #kpress(signal['1'])            
+    elif signal['0']=='kr':
+        if signal['1']=='up':
+            keyboard_control.release(keyboard.Key.up)
+            check_if_press['get'].remove('up')
+        elif signal['1']=='down':
+            keyboard_control.release(keyboard.Key.down)
+            check_if_press['get'].remove('down')
+        elif signal['1']=='left':
+            keyboard_control.release(keyboard.Key.left)
+            check_if_press['get'].remove('left')
+        elif signal['1']=='right':
+            keyboard_control.release(keyboard.Key.right)
+            check_if_press['get'].remove('right')
+        elif signal['1']=='enter':
+            keyboard_control.release(keyboard.Key.enter)
+            check_if_press['get'].remove('enter')
+        else:
+            krelease((signal['1']))
     """i=0
     j=0
     signal=['','','']
