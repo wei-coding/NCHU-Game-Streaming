@@ -7,6 +7,7 @@ Created on Sat Mar  6 23:02:31 2021
 import socket
 from libjpeg_turbo.protocol import *
 import threading
+from PyQt5.QtWidgets import QApplication
 
 from pynput import keyboard
 from pynput.mouse import Listener
@@ -15,6 +16,7 @@ from pynput.mouse import Listener
 class ClientSide(threading.Thread):
     def __init__(self, server_ip, port, parent):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.server_ip = server_ip
         self.port = port
         self.parent = parent
@@ -32,6 +34,7 @@ class ClientSide(threading.Thread):
 
     def kill(self):
         self.join(0)
+        exit(0)
 
 
 class MouseThread(threading.Thread):
