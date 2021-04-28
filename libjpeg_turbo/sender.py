@@ -5,9 +5,11 @@ import time
 import cv2
 import d3dshot
 import turbojpeg
+import struct
 from protocol import *
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
+import struct
 
 
 class FrameSegment(threading.Thread):
@@ -15,8 +17,8 @@ class FrameSegment(threading.Thread):
     Object to break down image frame segment
     if the size of image exceed maximum datagram size
     """
-    MAX_DGRAM = 2 ** 16
-    MAX_IMAGE_DGRAM = MAX_DGRAM >> 6  # extract 64 bytes in case UDP frame overflown
+    MAX_DGRAM = GSP.PACKET_SIZE
+    MAX_IMAGE_DGRAM = MAX_DGRAM - sizeof(GSPHeader)  # extract 64 bytes in case UDP frame overflown
     JPEG = turbojpeg.TurboJPEG()
 
     def __init__(self, sock, addr, port):
@@ -41,12 +43,12 @@ class FrameSegment(threading.Thread):
             self.frame += 1
             self.frame %= 256
             if img is not None:
-                dat = self.JPEG.encode(img, quality=70)
+                dat = self.JPEG.encode(img, quality=50)
                 size = len(dat)
-                print(size)
+                # print(size)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
                 array_pos_start = 0
-                print(count)
+                # print(count)
                 while count:
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
@@ -95,6 +97,7 @@ class FastScreenshots:
             return True, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         else:
             return False, None
+
 
     def stop(self):
         self.d.stop()
@@ -163,7 +166,17 @@ class StartServer(threading.Thread):
                 break
         """ end of three way handshake """
         """ send screen resolution """
-        packet = GSPHeader(self.seq, 0, 1,)
+        geo = QtWidgets.QApplication.desktop().screenGeometry()
+        packet = bytes(GSPHeader(type=GSP.RES)) + struct.pack('II', geo.width(), geo.height())
+        self.s.sendto(packet, (self.remote_host, self.remote_port))
+        print("finish sending")
+        """ screen resolution """
+        while self.signal:
+            recv, (self.remote_host, self.remote_port) = self.s.recvfrom(1024)
+            recv = GSPHeader.from_buffer_copy(recv)
+            if recv.type == GSP.RES_ACK:
+                break
+        """ end of resolution check """
         self.fs = FrameSegment(self.s, self.remote_host, self.remote_port)
         self.fs.start()
         self.parent.start_sig.emit()

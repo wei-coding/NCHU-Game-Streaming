@@ -11,7 +11,7 @@ import traceback
 from pynput import keyboard
 from pynput import mouse
 
-from libjpeg_turbo.protocol import *
+from protocol import *
 
 
 class ServerSide(threading.Thread):
@@ -33,11 +33,12 @@ class ServerSide(threading.Thread):
         self.mouse_control = mouse.Controller()
         self.keyboard_control = keyboard.Controller()
         while not self.stop:
+            next_signal = None
             signal = None
             try:
-                clientMessage = (self.conn.recv(1024))
-                # signal = json.loads(clientMessage)
+                clientMessage = (self.conn.recv(8))
                 signal = GSSPBody.from_buffer_copy(clientMessage)
+                print(clientMessage)
             except:
                 traceback.print_exc()
                 exit(-1)
@@ -78,31 +79,36 @@ class ServerSide(threading.Thread):
                         self.keyboard_control.release(keyboard.Key.enter)
                     else:
                         btn = signal.btn.decode("utf-8")
+                        print("call release", btn)
                         self.krelease(btn)
 
     def mmove(self, x, y):
         self.mouse_control.position = (x, y)
-        self.parent.logs.appendPlainText(f'Keyboard/Mouse: {self.mouse_control.position}')
+        # self.parent.logs.appendPlainText(f'Keyboard/Mouse: {self.mouse_control.position}')
 
     def mpress(self):
         self.mouse_control.press(mouse.Button.left)
-        self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has press')
+        # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has press')
+        print('Keyboard/Mouse: mouse has press')
 
     def mrelease(self):
         self.mouse_control.release(mouse.Button.left)
-        self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has release')
+        # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has release')
+        print('Keyboard/Mouse: mouse has release')
 
     def mscroll(self, x, y):
         self.mouse_control.scroll(x, y)
-        self.parent.logs.appendPlainText('Keyboard/Mouse: mouse scroll')
+        # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse scroll')
 
     def kpress(self, a):
         self.keyboard_control.press(a)
-        self.parent.logs.appendPlainText(f'Keyboard/Mouse: keyboard press {a}')
+        # self.parent.logs.appendPlainText(f'Keyboard/Mouse: keyboard press {a}')
+        print(f'Keyboard/Mouse: keyboard press {a}')
 
     def krelease(self, a):
         self.keyboard_control.release(a)
-        self.parent.logs.appendPlainText(f'Keyboard/Mouse: keyboard release {a}')
+        # self.parent.logs.appendPlainText(f'Keyboard/Mouse: keyboard release {a}')
+        print(f'Keyboard/Mouse: keyboard release {a}')
 
     def kill(self):
         self.stop = True

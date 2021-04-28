@@ -1,4 +1,4 @@
-# game_streaming(區網內的遊戲串流)
+# Game_Streaming(區網內的遊戲串流)
 
 ## 進度一覽表
 
@@ -50,6 +50,9 @@
 * 想找更快的截圖方法，但看起來還是d3dshot+turbojpeg最快
 * 將封包切成更小段，提昇傳輸穩定度，閃爍也較少了
 * 建立client GUI
+* 滑鼠訊號採用自訂協定
+* 整合鍵盤滑鼠訊號及畫面
+* 
 
 ## 安裝說明
 
@@ -62,3 +65,10 @@
 ## 參考資料
 
 [Speed-Up JPEG Encode/Decode Processing for OpenCV using libjpeg-turbo – Summary?Blog (unanancyowen.com)](http://unanancyowen.com/en/opencv-with-libjpeg-turbo/)
+
+[Fast camera live streaming with UDP](https://github.com/ancabilloni/udp_camera_streaming)
+
+[RTSP and RTP streaming](https://github.com/gabrieljablonski/rtsp-rtp-stream)
+
+[myDesktop](https://github.com/jacklam718/myDesktop)
+

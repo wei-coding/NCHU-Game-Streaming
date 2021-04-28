@@ -9,7 +9,7 @@ import threading
 import struct
 
 
-MAX_DGRAM = 2 ** 16
+MAX_DGRAM = GSP.PACKET_SIZE
 
 
 class Receiver(threading.Thread):

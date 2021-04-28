@@ -63,6 +63,7 @@ class GSP:
     RES = 6
     RES_ACK = 7
     NONE = 0
+    PACKET_SIZE = 2 ** 10
 
 
 class GSPHeader(Structure):
