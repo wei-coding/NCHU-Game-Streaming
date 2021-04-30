@@ -15,8 +15,8 @@ class FrameSegment(threading.Thread):
     Object to break down image frame segment
     if the size of image exceed maximum datagram size
     """
-    MAX_DGRAM = 2 ** 16
-    MAX_IMAGE_DGRAM = MAX_DGRAM >> 6  # extract 64 bytes in case UDP frame overflown
+    MAX_DGRAM = GSP.PACKET_SIZE
+    MAX_IMAGE_DGRAM = MAX_DGRAM - sizeof(GSPHeader)
     JPEG = turbojpeg.TurboJPEG()
 
     def __init__(self, sock, addr, port):
@@ -73,7 +73,7 @@ class BufferClearService(threading.Thread):
 
     def run(self):
         while not self.sig:
-            time.sleep(1)
+            time.sleep(0.5)
             self.buffer.clear()
 
     def stop(self):

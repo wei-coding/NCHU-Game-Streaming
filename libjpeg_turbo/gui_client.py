@@ -26,8 +26,9 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         server_ip = self.serverip_textedit.toPlainText()
         port = self.port_textedit.toPlainText()
         if server_ip == '':
-            self.logs.appendPlainText('Wrong server ip! Please retry.')
-            return
+            # self.logs.appendPlainText('Wrong server ip! Please retry.')
+            # return
+            server_ip = '192.168.31.174'
         if port == '':
             port = 12345
         else:

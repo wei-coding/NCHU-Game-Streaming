@@ -6,6 +6,7 @@ import ctypes
 import time
 import traceback
 import threading
+import struct
 
 
 MAX_DGRAM = 2 ** 16
@@ -23,7 +24,6 @@ class Receiver(threading.Thread):
         self.jpeg = turbojpeg.TurboJPEG()
 
     def run(self):
-
         """ implement three way handshake """
         print('trying connect 0')
         while True:
@@ -45,14 +45,25 @@ class Receiver(threading.Thread):
         else:
             print('handshake to {}:{} success. start transmittimg...'.format(addr[0], addr[1]))
         """ end of three way handshake """
+        """ res """
+        while True:
+            recv, addr = self.s.recvfrom(GSP.PACKET_SIZE)
+            header = GSPHeader.from_buffer_copy(recv[:sizeof(GSPHeader)])
+            if header.type == GSP.RES:
+                self.geo = struct.unpack('II', recv[sizeof(GSPHeader):])
+                print(self.geo)
+                break
+        packet = GSPHeader(type=GSP.RES_ACK)
+        self.s.sendto(packet, (self.server_ip, self.port))
+        """ end of res """
         img = None
         dat = b''
-        # dump_buffer(self.s)
+        dump_buffer(self.s)
         while not self.stop:
             cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
             # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             try:
-                seg, addr = self.s.recvfrom(MAX_DGRAM)
+                seg, addr = self.s.recvfrom(GSP.PACKET_SIZE)
             except KeyboardInterrupt:
                 break
             header = GSPHeader.from_buffer_copy(seg[:ctypes.sizeof(GSPHeader)])
@@ -68,14 +79,15 @@ class Receiver(threading.Thread):
             payload = seg[ctypes.sizeof(GSPHeader):]
             dat += payload
             if last:
-                dat += payload
-
                 try:
                     img = self.jpeg.decode(dat)
+                    previous_img = dat
                 except Exception:
                     traceback.print_exc()
                 if img is not None:
-
+                    cv2.namedWindow('frame', cv2.WINDOW_FULLSCREEN)
+                    # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+                    cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
                     cv2.imshow('frame', img)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
