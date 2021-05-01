@@ -10,6 +10,7 @@ from protocol import *
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
 import struct
+import traceback
 
 
 class FrameSegment(threading.Thread):
@@ -20,6 +21,7 @@ class FrameSegment(threading.Thread):
     MAX_DGRAM = GSP.PACKET_SIZE
     MAX_IMAGE_DGRAM = MAX_DGRAM - sizeof(GSPHeader)
     JPEG = turbojpeg.TurboJPEG()
+    QUALITY = 50
 
     def __init__(self, sock, addr, port):
         threading.Thread.__init__(self)
@@ -43,7 +45,7 @@ class FrameSegment(threading.Thread):
             self.frame += 1
             self.frame %= 256
             if img is not None:
-                dat = self.JPEG.encode(img, quality=50)
+                dat = self.JPEG.encode(img, quality=self.QUALITY)
                 size = len(dat)
                 # print(size)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
@@ -59,6 +61,19 @@ class FrameSegment(threading.Thread):
                     count -= 1
             else:
                 time.sleep(0.01)
+            try:
+                print('trying get packet')
+                packet = self.s.recvfrom(GSP.PACKET_SIZE)
+                packet = GSPHeader.from_buffer_copy(packet)
+                if packet.type == GSP.CONTROL:
+                    if packet.fn == GSP.CONGESTION:
+                        print('got congestion, decrease quality')
+                        self.QUALITY -= 2
+                    elif packet.fn == GSP.RECOVER:
+                        print('got recover, increase quality')
+                        self.QUALITY += 1
+            except:
+                traceback.print_exc()
 
     def stop(self):
         self.signal = False
@@ -177,6 +192,7 @@ class StartServer(threading.Thread):
             if recv.type == GSP.RES_ACK:
                 break
         """ end of resolution check """
+        self.s.setblocking(False)
         self.fs = FrameSegment(self.s, self.remote_host, self.remote_port)
         self.fs.start()
         self.parent.start_sig.emit()
