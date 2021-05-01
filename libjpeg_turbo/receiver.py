@@ -57,6 +57,7 @@ class Receiver(threading.Thread):
         packet = GSPHeader(type=GSP.RES_ACK)
         self.s.sendto(packet, (self.server_ip, self.port))
         """ end of res """
+        previous_img = None
         img = None
         dat = b''
         dump_buffer(self.s)
@@ -80,7 +81,6 @@ class Receiver(threading.Thread):
             if last:
                 try:
                     img = self.jpeg.decode(dat)
-                    previous_img = dat
                 except Exception:
                     traceback.print_exc()
                 if img is not None:
@@ -88,9 +88,23 @@ class Receiver(threading.Thread):
                     # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                     cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
                     cv2.imshow('frame', img)
+                    previous_img = img.copy()
+                else:
+                    if previous_img is not None:
+                        cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+                        # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+                        cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
+                        cv2.imshow('frame', previous_img)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
                 dat = b''
+                print(time.time()-header.timestamp)
+                if time.time()-header.timestamp >= 0.025:
+                    report = GSPHeader(type=GSP.CONTROL, fn=GSP.CONGESTION)
+                    self.s.sendto(report, (self.server_ip, self.port))
+                else:
+                    report = GSPHeader(type=GSP.CONTROL, fn=GSP.RECOVER)
+                    self.s.sendto(report, (self.server_ip, self.port))
         if self.parent:
             self.parent.logs.appendHtml("stop connecttion")
             self.parent.signal_service.kill()

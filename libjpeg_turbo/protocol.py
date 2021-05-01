@@ -15,8 +15,6 @@ about GSPHeader:
         + congestion control:
             + 0100b: can't catch up, lower the quality
             + 0101b: normal transmission for 10 frame, increase quality
-            + 0110b: got it, lower the quality
-            + 0111b: got it, increase quality
         + screen resolution check:
             + 1000b: send resolution
             + 1001b: ACK for resolution check
@@ -59,9 +57,10 @@ class GSP:
     SYN_ACK = 1
     ACK = 2
     STOP = 3
-    CONGESTION = 4
-    RES = 6
-    RES_ACK = 7
+    CONGESTION = 0b0100
+    RECOVER = 0b0101
+    RES = 8
+    RES_ACK = 9
     NONE = 0
     PACKET_SIZE = 2 ** 10 + 64
 
