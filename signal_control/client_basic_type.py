@@ -24,9 +24,7 @@ print("connet success")
 def mouse_thread():
 
     def on_move(x, y):
-        # print('Pointer moved to {0}'.format((x, y)))
-        # tojson = {'0': 'mm', '1': x, '2': y}
-        # tojson = json.dumps(tojson)
+        print('Pointer moved to {0}'.format((x, y)))
         data = GSSPBody(GSSP.MOUSE, GSSP.M, x, y, GSSP.NO_BTN, 0)
         client.send(data)
 
@@ -43,10 +41,6 @@ def mouse_thread():
 
     def on_scroll(x, y, dx, dy):
         print('Scrolled ', x, y, dx, dy)
-        # tojson = {'0': 'ms', '1': dx, '2': dy}
-        # print(tojson)
-        # tojson = json.dumps(tojson)
-        # print(tojson)
         data = GSSPBody(GSSP.MOUSE, GSSP.S, dx, dy, GSSP.NO_BTN, 0)
         client.send(data)
 
@@ -65,12 +59,7 @@ def mouse_thread():
 def keyboard_thread():
     def on_press(key):
         try:
-            print('alphanumeric key {0} pressed'.format(
-                key.char))
-
-            # a = {'0': 'kp', '1': key.char, '2': 5}
-            # b = json.dumps(a)
-            # print('inside', b)
+            print('alphanumeric key {0} pressed'.format(key.char))
             data = GSSPBody(GSSP.KEYBOARD, GSSP.P, 0, 0, bytes(key.char, encoding='utf-8'), 0)
             client.send(data)
 
@@ -90,11 +79,6 @@ def keyboard_thread():
                 action = GSSP.ENTER
 
             data = GSSPBody(GSSP.KEYBOARD, GSSP.P, 0, 0, 0, action)
-
-            # a={'0':'kp','1':key.char,'2':0}
-            # print(a)
-            # b = json.dumps(a)
-            # print(b)
             client.send(data)
 
     def on_release(key):
@@ -116,11 +100,7 @@ def keyboard_thread():
                 keyboard.Key.right: GSSP.RIGHT,
                 keyboard.Key.enter: GSSP.ENTER,
             }
-
-            # a={'0':'kr','1':'a','2':0}
-            # b = json.dumps(a)
-            # print(b)
-            data = GSSPBody(GSSP.KEYBOARD, GSSP.R, 0, 0, b'\0', switch[key])
+            data = GSSPBody(GSSP.KEYBOARD, GSSP.R, 0, 0, 0, bytes(switch[key]))
             client.send(data)
 
     # Collect events until released
