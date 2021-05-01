@@ -20,6 +20,8 @@ class ServerSide(threading.Thread):
         self.parent = parent
         self.port = port
         self.stop = False
+        self.keyboard_control = None
+        self.mouse_control = None
 
     def run(self):
         self.parent.logs.appendPlainText("Keyboard/Mouse system connecting")
@@ -32,6 +34,7 @@ class ServerSide(threading.Thread):
         self.parent.logs.appendPlainText("Keyboard/Mouse connect success")
         self.mouse_control = mouse.Controller()
         self.keyboard_control = keyboard.Controller()
+        '''
         while not self.stop:
             next_signal = None
             signal = None
@@ -81,6 +84,7 @@ class ServerSide(threading.Thread):
                         btn = signal.btn.decode("utf-8")
                         print("call release", btn)
                         self.krelease(btn)
+            '''
 
     def mmove(self, x, y):
         self.mouse_control.position = (x, y)
