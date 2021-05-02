@@ -84,22 +84,22 @@ class Receiver(threading.Thread):
                 except Exception:
                     traceback.print_exc()
                 if img is not None:
-                    cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+                    # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
                     # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                    cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
+                    # cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
                     cv2.imshow('frame', img)
                     previous_img = img.copy()
                 else:
                     if previous_img is not None:
-                        cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+                        # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
                         # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                        cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
+                        # cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
                         cv2.imshow('frame', previous_img)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
                 dat = b''
                 print(time.time()-header.timestamp)
-                if time.time()-header.timestamp >= 0.025:
+                if time.time()-header.timestamp >= 0.03:
                     report = GSPHeader(type=GSP.CONTROL, fn=GSP.CONGESTION)
                     self.s.sendto(report, (self.server_ip, self.port))
                 else:

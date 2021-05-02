@@ -10,7 +10,7 @@ from protocol import *
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
 import struct
-import traceback
+import select
 
 
 class FrameSegment(threading.Thread):
@@ -33,6 +33,7 @@ class FrameSegment(threading.Thread):
         self.frame = -1
         self.addr = addr
         self.port = port
+        self.quality_checker = QualityChecker(self)
         self.scn.start()
 
     def run(self):
@@ -40,6 +41,7 @@ class FrameSegment(threading.Thread):
         Compress image and Break down
         into data segments
         """
+        self.quality_checker.start()
         while self.signal:
             sucess, img = self.scn.get_latest_frame()
             self.frame += 1
@@ -61,25 +63,41 @@ class FrameSegment(threading.Thread):
                     count -= 1
             else:
                 time.sleep(0.01)
-            try:
-                print('trying get packet')
-                packet = self.s.recvfrom(GSP.PACKET_SIZE)
-                packet = GSPHeader.from_buffer_copy(packet)
-                if packet.type == GSP.CONTROL:
-                    if packet.fn == GSP.CONGESTION:
-                        print('got congestion, decrease quality')
-                        self.QUALITY -= 2
-                    elif packet.fn == GSP.RECOVER:
-                        print('got recover, increase quality')
-                        self.QUALITY += 1
-            except:
-                traceback.print_exc()
 
     def stop(self):
         self.signal = False
         self.scn.stop()
         send_data = GSPHeader(0, GSP.CONTROL, GSP.STOP, 0, 1, time.time())
         self.s.sendto(send_data, (self.addr, self.port))
+
+
+class QualityChecker(threading.Thread):
+    def __init__(self, parent: FrameSegment):
+        threading.Thread.__init__(self)
+        self.parent = parent
+
+    def run(self):
+        while True:
+            ready_r, _, _ = select.select([self.parent.s], [], [], 1)
+            for sck in ready_r:
+                sck.setblocking(0)
+                packet = sck.recv(GSP.PACKET_SIZE)
+                self.handle_recv(packet)
+
+    def handle_recv(self, packet):
+        packet = GSPHeader.from_buffer_copy(packet)
+        if packet.type == GSP.CONTROL:
+            if packet.fn == GSP.CONGESTION:
+                # print('got congestion, decrease quality')
+                self.parent.QUALITY -= 2
+            elif packet.fn == GSP.RECOVER:
+                # print('got recover, increase quality')
+                self.parent.QUALITY += 1
+        if self.parent.QUALITY < 20:
+            self.parent.QUALITY = 20
+        elif self.parent.QUALITY > 50:
+            self.parent.QUALITY = 50
+
 
 
 class BufferClearService(threading.Thread):
