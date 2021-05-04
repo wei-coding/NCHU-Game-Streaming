@@ -63,6 +63,19 @@ class FrameSegment(threading.Thread):
                     count -= 1
             else:
                 time.sleep(0.01)
+            try:
+                print('trying get packet')
+                packet = self.s.recvfrom(GSP.PACKET_SIZE)
+                packet = GSPHeader.from_buffer_copy(packet)
+                if packet.type == GSP.CONTROL:
+                    if packet.fn == GSP.CONGESTION:
+                        print('got congestion, decrease quality')
+                        self.QUALITY -= 2
+                    elif packet.fn == GSP.RECOVER:
+                        print('got recover, increase quality')
+                        self.QUALITY += 1
+            except:
+                traceback.print_exc()
 
     def stop(self):
         self.signal = False
