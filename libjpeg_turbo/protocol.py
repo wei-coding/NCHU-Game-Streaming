@@ -79,10 +79,12 @@ class GSPHeader(Structure):
 class GSSP:
     MOUSE = 0
     KEYBOARD = 1
-    P = 0
-    R = 1
+    PR = 0
+    RR = 1
     M = 2
     S = 3
+    PL = 4
+    RL = 5
     UP = 1
     DOWN = 2
     LEFT = 3
@@ -98,8 +100,8 @@ class GSSPBody(Structure):
     _fields_ = [
         ('type', c_uint8),
         ('action', c_uint8),
-        ('x', c_uint16),
-        ('y', c_uint16),
+        ('x', c_int16),
+        ('y', c_int16),
         ('btn', c_char),
         ('special', c_uint8)
     ]
