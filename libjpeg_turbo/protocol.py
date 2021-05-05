@@ -62,7 +62,7 @@ class GSP:
     RES = 8
     RES_ACK = 9
     NONE = 0
-    PACKET_SIZE = 2 ** 10 + 64
+    PACKET_SIZE = 2 ** 13 + 64
 
 
 class GSPHeader(Structure):

@@ -61,6 +61,7 @@ class Receiver(threading.Thread):
         img = None
         dat = b''
         dump_buffer(self.s)
+        begin_time = 0.0
         while not self.stop:
             try:
                 seg, addr = self.s.recvfrom(GSP.PACKET_SIZE)
@@ -95,16 +96,19 @@ class Receiver(threading.Thread):
                         cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                         cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
                         cv2.imshow('frame', previous_img)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                cv2.waitKey(1)
+                # if cv2.waitKey(1) & 0xFF == ord('q'):
+                #    break
                 dat = b''
-                print(time.time()-header.timestamp)
-                if time.time()-header.timestamp >= 0.035:
+                diff_time = time.time() - begin_time
+                print(diff_time)
+                if diff_time >= 0.3:
                     report = GSPHeader(type=GSP.CONTROL, fn=GSP.CONGESTION)
                     self.s.sendto(report, (self.server_ip, self.port))
                 else:
                     report = GSPHeader(type=GSP.CONTROL, fn=GSP.RECOVER)
                     self.s.sendto(report, (self.server_ip, self.port))
+                begin_time = header.timestamp
         if self.parent:
             self.parent.logs.appendHtml("stop connecttion")
             self.parent.signal_service.kill()

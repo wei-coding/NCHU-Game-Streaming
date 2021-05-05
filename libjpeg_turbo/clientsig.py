@@ -104,7 +104,7 @@ class KeyboardThread(threading.Thread):
                 action = GSSP.LEFT
             elif key == keyboard.Key.right:
                 action = GSSP.RIGHT
-            elif key == keyboard.Key.enter:
+            else:
                 action = GSSP.ENTER
 
             data = GSSPBody(GSSP.KEYBOARD, GSSP.P, 0, 0, 0, action)

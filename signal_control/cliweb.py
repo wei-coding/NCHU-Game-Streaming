@@ -12,8 +12,8 @@ HOST = '192.168.31.174'
 PORT = 8000
 clientMessage = ['mp',6,89]
 print(clientMessage)
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((HOST, PORT))
+#client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#client.connect((HOST, PORT))
 print("connet success")
 
 #client.close()
@@ -28,19 +28,19 @@ def mouse_Thread():
         print('Pointer moved to {0}'.format(
             (x, y)))
         #print(type(x))
-        if(ax!=x and bx!=y):        
+        """if(ax!=x and bx!=y):        
             tojson={'0':'mm','1':x,'2':y}       
             #print(time.time())
             tojson=json.dumps(tojson)
             print(tojson)
-            client.send(tojson.encode())
+            client.send(tojson.encode())"""
     def on_click(x, y, button, pressed):
         print('{0} at {1}'.format(
             'Pressed' if pressed else 'Released',
             (x, y)))
         print(button)
         print(type(button),type(pressed))
-        tojson={'0':'mp','1':x,'2':y}       
+        """tojson={'0':'mp','1':x,'2':y}       
         print(tojson)
         tojson=json.dumps(tojson)
         print(tojson)
@@ -52,14 +52,14 @@ def mouse_Thread():
             tojson=json.dumps(tojson)
             print(tojson)
             client.send(tojson.encode())
-            return False
+            return False"""
     def on_scroll(x, y, dx, dy):
         print('Scrolled ',x,y,dx,dy)
-        tojson={'0':'mm','1':dx,'2':dy}       
+        """tojson={'0':'mm','1':dx,'2':dy}       
         print(tojson)
         tojson=json.dumps(tojson)
         print(tojson)
-        client.send(tojson.encode())
+        client.send(tojson.encode())"""
     # Collect events until released
     with Listener(
             on_move=on_move,
@@ -76,7 +76,7 @@ def keyboard_Thread():
             print('alphanumeric key {0} pressed'.format(
                 key.char))
             #print(type(key),key)
-            if(key.char not in check_if_press['get']):
+            """if(key.char not in check_if_press['get']):
                 check_if_press['get'].append(key.char)
                 a={'0':'kp','1':key.char,'2':5}       
                 b=json.dumps(a)
@@ -84,7 +84,7 @@ def keyboard_Thread():
                 client.send(b.encode())
                 
             else:
-                print('is pressed',key.char)
+                print('is pressed',key.char)"""
             
             
             
@@ -93,7 +93,7 @@ def keyboard_Thread():
                 key))
             print(key)
             #sepcial key
-            if key == keyboard.Key.esc:
+            """if key == keyboard.Key.esc:
             # Stop listener
                 return False
             if(key==keyboard.Key.up):
@@ -109,13 +109,13 @@ def keyboard_Thread():
          
             #a={'0':'kp','1':key.char,'2':0}      
             #print(a)
-            b=json.dumps(a)
+            #b=json.dumps(a)
             print(b)
-            client.send(b.encode())
+            #client.send(b.encode())"""
     def on_release(key):
         try:            
             print('{0} released'.format(key))
-            if(key.char in check_if_press['get']):
+            """if(key.char in check_if_press['get']):
                 check_if_press['get'].remove(key.char)
                 a={'0':'kr','1':key.char,'2':5}       
                 #print(a)
@@ -124,11 +124,11 @@ def keyboard_Thread():
                 client.send(b.encode())
                 print('get',key.char)
             else:
-                print('is used',key.char)
+                print('is used',key.char)"""
             
         except Exception:
             print('{0} released'.format(key))
-            if(key==keyboard.Key.up):
+            """if(key==keyboard.Key.up):
                 a={'0':'kr','1':'up','2':0}
             elif(key==keyboard.Key.down):
                 a={'0':'kr','1':'down','2':0}
@@ -141,7 +141,7 @@ def keyboard_Thread():
             #print(a)
             b=json.dumps(a)
             print(b)
-            client.send(b.encode())
+            client.send(b.encode())"""
         if key == keyboard.Key.esc:
             # Stop listener
             return False
@@ -153,20 +153,20 @@ def keyboard_Thread():
         listener.join()
 
 from threading import Thread
-def f():
+"""def f():
     print('a')
     st=time.time()
     while 1:
         if time.time()-st>0.2:
             check_if_press['get'].clear()
-            st=time.time()
-        
+            st=time.time()"""
+
         
 if __name__ == '__main__':
     p1= Thread(target=mouse_Thread)
     p1.start()
-    p2=Thread(target=f)
-    p2.start()
+    #p2=Thread(target=keyboard_Thread)
+    #p2.start()
     p1.join()
-    p2.join()
+    #p2.join()
     

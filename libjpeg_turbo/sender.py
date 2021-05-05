@@ -112,7 +112,6 @@ class QualityChecker(threading.Thread):
             self.parent.QUALITY = 50
 
 
-
 class BufferClearService(threading.Thread):
     def __init__(self, buffer):
         threading.Thread.__init__(self)
