@@ -34,7 +34,6 @@ class ServerSide(threading.Thread):
         self.parent.logs.appendPlainText("Keyboard/Mouse connect success")
         self.mouse_control = mouse.Controller()
         self.keyboard_control = keyboard.Controller()
-        '''
         while not self.stop:
             next_signal = None
             signal = None
@@ -48,14 +47,18 @@ class ServerSide(threading.Thread):
             if signal.type == GSSP.MOUSE:
                 if signal.action == GSSP.M:
                     self.mmove(signal.x, signal.y)
-                elif signal.action == GSSP.P:
-                    self.mpress()
-                elif signal.action == GSSP.R:
-                    self.mrelease()
+                elif signal.action == GSSP.PL:
+                    self.mpress(1)
+                elif signal.action == GSSP.RL:
+                    self.mrelease(1)
+                elif signal.action == GSSP.PR:
+                    self.mpress(0)
+                elif signal.action == GSSP.RR:
+                    self.mrelease(0)
                 elif signal.action == GSSP.S:
                     self.mscroll(signal.x, signal.y)
             elif signal.type == GSSP.KEYBOARD:
-                if signal.action == GSSP.P:
+                if signal.action == GSSP.PR:
                     if signal.special == GSSP.UP:
                         self.keyboard_control.press(keyboard.Key.up)
                     elif signal.special == GSSP.DOWN:
@@ -69,7 +72,7 @@ class ServerSide(threading.Thread):
                     else:
                         btn = signal.btn.decode("utf-8")
                         self.kpress(btn)
-                elif signal.action == GSSP.R:
+                elif signal.action == GSSP.RR:
                     if signal.special == GSSP.UP:
                         self.keyboard_control.release(keyboard.Key.up)
                     elif signal.special == GSSP.DOWN:
@@ -84,25 +87,34 @@ class ServerSide(threading.Thread):
                         btn = signal.btn.decode("utf-8")
                         print("call release", btn)
                         self.krelease(btn)
-            '''
 
     def mmove(self, x, y):
         self.mouse_control.position = (x, y)
         # self.parent.logs.appendPlainText(f'Keyboard/Mouse: {self.mouse_control.position}')
 
-    def mpress(self):
-        self.mouse_control.press(mouse.Button.left)
+    def mpress(self,left):
+        if left == 1:
+            self.mouse_control.press(mouse.Button.left)
+            print('Keyboard/Mouse_left: mouse has press')
+        elif left == 0:
+            self.mouse_control.press(mouse.Button.right)
+            print('Keyboard/Mouse_right: mouse has press')
         # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has press')
-        print('Keyboard/Mouse: mouse has press')
+        # print('Keyboard/Mouse: mouse has press')
 
-    def mrelease(self):
-        self.mouse_control.release(mouse.Button.left)
+    def mrelease(self,left):
+        if left==1 :
+            self.mouse_control.release(mouse.Button.left)
+            print('Keyboard/Mouse_left: mouse has release')
+        if left==0 :
+            self.mouse_control.release(mouse.Button.right)
+            print('Keyboard/Mouse_right: mouse has release')
         # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has release')
         print('Keyboard/Mouse: mouse has release')
 
     def mscroll(self, x, y):
         self.mouse_control.scroll(x, y)
-        # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse scroll')
+        # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse scroll',x,y)
 
     def kpress(self, a):
         self.keyboard_control.press(a)

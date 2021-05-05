@@ -40,7 +40,6 @@ class ClientSide(threading.Thread):
 class MouseThread(threading.Thread):
     def __init__(self, parent):
         threading.Thread.__init__(self)
-        self.daemon = True
         self.parent = parent
 
     def run(self):
@@ -78,7 +77,6 @@ class MouseThread(threading.Thread):
 class KeyboardThread(threading.Thread):
     def __init__(self, parent):
         threading.Thread.__init__(self)
-        self.daemon = True
         self.parent = parent
 
     def run(self):
