@@ -84,8 +84,7 @@ class ServerSide(threading.Thread):
                         btn = signal.btn.decode("utf-8")
                         print("call release", btn)
                         self.krelease(btn)
-            '''
-
+        '''
     def mmove(self, x, y):
         self.mouse_control.position = (x, y)
         # self.parent.logs.appendPlainText(f'Keyboard/Mouse: {self.mouse_control.position}')

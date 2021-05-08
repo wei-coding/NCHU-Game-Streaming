@@ -33,7 +33,6 @@ class ClientSide(threading.Thread):
         self.keyboard_thread.join()
 
     def kill(self):
-        self.join(0)
         exit(0)
 
 

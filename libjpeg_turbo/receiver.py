@@ -2,11 +2,13 @@ import socket
 import cv2
 import turbojpeg
 from protocol import *
-import ctypes
+from ctypes import *
 import time
 import traceback
 import threading
 import struct
+import numpy as np
+from concurrent.futures import ThreadPoolExecutor
 
 
 MAX_DGRAM = GSP.PACKET_SIZE
@@ -23,6 +25,7 @@ class Receiver(threading.Thread):
         self.port = port
         self.jpeg = turbojpeg.TurboJPEG()
         self.geo = None
+        self.show_img = ShowImage(10)
 
     def run(self):
         """ implement three way handshake """
@@ -55,67 +58,80 @@ class Receiver(threading.Thread):
                 print(self.geo)
                 break
         packet = GSPHeader(type=GSP.RES_ACK)
-        self.s.sendto(packet, (self.server_ip, self.port))
+        self.s.sendto(string_at(addressof(packet), sizeof(packet)), (self.server_ip, self.port))
         """ end of res """
-        previous_img = None
         img = None
         dat = b''
         dump_buffer(self.s)
+        self.show_img.start()
         while not self.stop:
             try:
                 seg, addr = self.s.recvfrom(GSP.PACKET_SIZE)
             except KeyboardInterrupt:
                 break
-            header = GSPHeader.from_buffer_copy(seg[:ctypes.sizeof(GSPHeader)])
-            last = (header.last == 1)
-            seq = header.seq
-            '''print(f'seq: {seq}, self.seq: {self.seq}')
-            if seq != self.seq + 1:
-                self.seq += 1
-                data = GSPHeader(seq=self.seq, type=GSP.CONTROL, fn=GSP.CONGESTION)
-                self.s.sendto(data, (self.server_ip, self.port))
-                continue'''
+            header = GSPHeader()
+            # print('sizeof(GSPHeader) = {}'.format(sizeof(GSPHeader)))
+            memmove(addressof(header), seg[:sizeof(GSPHeader)], sizeof(GSPHeader))
             self.stop = (header.fn == GSP.STOP)
-            payload = seg[ctypes.sizeof(GSPHeader):]
-            dat += payload
-            if last:
+            dat += seg[sizeof(GSPHeader):]
+            if header.last == 1:
                 try:
                     img = self.jpeg.decode(dat)
+                    if img is not None:
+                        self.show_img.push_img(img)
                 except Exception:
                     traceback.print_exc()
-                if img is not None:
-                    # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-                    # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                    # cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
-                    cv2.imshow('frame', img)
-                    previous_img = img.copy()
-                else:
-                    if previous_img is not None:
-                        # cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-                        # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                        # cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
-                        cv2.imshow('frame', previous_img)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
                 dat = b''
-                print(time.time()-header.timestamp)
-                if time.time()-header.timestamp >= 0.03:
-                    report = GSPHeader(type=GSP.CONTROL, fn=GSP.CONGESTION)
-                    self.s.sendto(report, (self.server_ip, self.port))
-                else:
-                    report = GSPHeader(type=GSP.CONTROL, fn=GSP.RECOVER)
-                    self.s.sendto(report, (self.server_ip, self.port))
         if self.parent:
             self.parent.logs.appendHtml("stop connecttion")
             self.parent.signal_service.kill()
         else:
             print('Server has stopped.')
-        cv2.destroyAllWindows()
+        self.show_img.kill()
         self.s.close()
 
     def kill(self):
         self.stop = True
         print('killed service')
+
+
+class ShowImage(threading.Thread):
+    def __init__(self, size=100):
+        threading.Thread.__init__(self)
+        self.show = True
+        self.buf = np.zeros(size, dtype=bytearray)
+        self.size = size
+        self.front = -1
+        self.rear = -1
+        self.last_frame = None
+
+    def run(self):
+        while self.show:
+            try:
+                cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+                # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+                # cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
+                cv2.imshow('frame', self.pop_img())
+                cv2.waitKey(1)
+            except:
+                time.sleep(0.01)
+
+    def push_img(self, img):
+        self.rear = (self.rear + 1) % self.size
+        if self.rear == self.front:
+            return
+        self.buf[self.rear] = img
+
+    def pop_img(self):
+        if self.front == self.rear:
+            return self.last_frame
+        self.front = (self.front + 1) % self.size
+        self.last_frame = self.buf[self.front]
+        return self.last_frame
+
+    def kill(self):
+        self.show = False
+        cv2.destroyAllWindows()
 
 
 def dump_buffer(s):

@@ -1,9 +1,6 @@
 from flask import Flask, render_template, Response, request
-from flask_caching import Cache
 import screenshot as scn
 from turbojpeg import TurboJPEG, TJPF_BGR
-from numba import jit
-from functools import lru_cache
 
 app = Flask(__name__)
 
@@ -18,19 +15,13 @@ jpeg = TurboJPEG()
 signal = True
 
 
-@jit
-def encode_jpeg(frame):
-    return jpeg.encode(frame, pixel_format=TJPF_BGR)
-
-
-@jit
 def gen_frames():
     global signal
     while signal:
         success, frame = screen.get_latest_frame()  # read the camera frame
         if not success:
             break
-        frame = encode_jpeg(frame)
+        frame = jpeg.encode(frame, pixel_format=TJPF_BGR)
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
 
