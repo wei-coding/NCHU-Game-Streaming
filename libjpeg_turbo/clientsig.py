@@ -8,6 +8,7 @@ import socket
 from libjpeg_turbo.protocol import *
 import threading
 from PyQt5.QtWidgets import QApplication
+import time
 
 from pynput import keyboard
 from pynput.mouse import Listener
@@ -27,13 +28,16 @@ class ClientSide(threading.Thread):
     def run(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((self.server_ip, self.port))
+        self.mouse_thread.stop = False
+        self.keyboard_thread.stop = False
         self.mouse_thread.start()
         self.keyboard_thread.start()
-        self.mouse_thread.join()
-        self.keyboard_thread.join()
 
     def kill(self):
-        exit(0)
+        self.mouse_thread.stop = True
+        self.keyboard_thread.stop = True
+        self.mouse_thread.join(0)
+        self.keyboard_thread.join(0)
 
 
 class MouseThread(threading.Thread):
@@ -41,13 +45,15 @@ class MouseThread(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         self.parent = parent
+        self.stop = False
 
     def run(self):
         with Listener(
                 on_move=self.on_move,
                 on_click=self.on_click,
                 on_scroll=self.on_scroll) as listener:
-            listener.join()
+            while not self.stop:
+                time.sleep(1)
 
     def on_move(self, x, y):
         # print('Pointer moved to {0}'.format((x, y)))
@@ -79,12 +85,14 @@ class KeyboardThread(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         self.parent = parent
+        self.stop = False
 
     def run(self):
         with keyboard.Listener(
                 on_press=self.on_press,
                 on_release=self.on_release) as listener:
-            listener.join()
+            while not self.stop:
+                time.sleep(1)
 
     def on_press(self, key):
         try:

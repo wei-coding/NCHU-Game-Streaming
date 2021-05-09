@@ -92,6 +92,7 @@ class Receiver(threading.Thread):
 
     def kill(self):
         self.stop = True
+        self.show_img.kill()
         print('killed service')
 
 
