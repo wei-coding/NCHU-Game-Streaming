@@ -160,7 +160,7 @@ class PrintScreen(threading.Thread):
                 continue
 
     def get_latest_frame(self):
-        return self.pop_img()
+        return True, self.pop_img()
 
     def push_img(self, img):
         self.rear = (self.rear + 1) % self.size

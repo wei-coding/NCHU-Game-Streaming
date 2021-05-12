@@ -122,7 +122,7 @@ class KeyboardThread(threading.Thread):
             elif key == keyboard.Key.ctrl_l:
                 action = GSSP.CT
             elif key == keyboard.Key.shift:
-                action == GSSP.SHIFT
+                action = GSSP.SHIFT
             else:
                 action = GSSP.ENTER
 
