@@ -11,6 +11,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
 import struct
 import select
+from ctypes import *
 
 
 class FrameSegment(threading.Thread):
@@ -57,7 +58,7 @@ class FrameSegment(threading.Thread):
                     self.seq += 1
                     array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
                     header = GSPHeader(self.seq, GSP.DATA, GSP.NONE, 0, count, time.time())
-                    send_data = bytes(header) + dat[array_pos_start:array_pos_end]
+                    send_data = string_at(addressof(header), sizeof(header)) + dat[array_pos_start:array_pos_end]
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
@@ -68,7 +69,7 @@ class FrameSegment(threading.Thread):
         self.signal = False
         self.scn.stop()
         send_data = GSPHeader(0, GSP.CONTROL, GSP.STOP, 0, 1, time.time())
-        self.s.sendto(send_data, (self.addr, self.port))
+        self.s.sendto(string_at(addressof(send_data), sizeof(send_data)), (self.addr, self.port))
 
 
 class QualityChecker(threading.Thread):
@@ -120,7 +121,7 @@ class FastScreenshots:
         self.clear_service = BufferClearService(self.d.frame_buffer)
 
     def start(self):
-        self.d.capture(target_fps=60)
+        self.d.capture(target_fps=30)
         self.clear_service.start()
 
     def get_latest_frame(self):
