@@ -10,8 +10,8 @@ import traceback
 
 from pynput import keyboard
 from pynput import mouse
-import pyautogui
-
+import pydirectinput
+pydirectinput.PAUSE=0
 from protocol import *
 
 
@@ -61,46 +61,59 @@ class ServerSide(threading.Thread):
             elif signal.type == GSSP.KEYBOARD:
                 if signal.action == GSSP.PR:
                     if signal.special == GSSP.UP:
-                        self.keyboard_control.press(keyboard.Key.up)
+                        pydirectinput.keyDown("up")
                     elif signal.special == GSSP.DOWN:
-                        self.keyboard_control.press(keyboard.Key.down)
+                        pydirectinput.keyDown("down")
                     elif signal.special == GSSP.LEFT:
-                        self.keyboard_control.press(keyboard.Key.left)
+                        pydirectinput.keyDown("left")
                     elif signal.special == GSSP.RIGHT:
-                        self.keyboard_control.press(keyboard.Key.right)
+                        pydirectinput.keyDown("right")
                     elif signal.special == GSSP.ENTER:
-                        self.keyboard_control.press(keyboard.Key.enter)
+                        pydirectinput.keyDown("enter")
+                    elif signal.special == GSSP.SPACE:
+                        pydirectinput.keyDown("space")
+                    elif signal.special == GSSP.CT:
+                        pydirectinput.keyDown("ctrl")
+                    elif signal.special == GSSP.SHIFT:
+                        pydirectinput.keyDown("shift")
                     else:
                         btn = signal.btn.decode("utf-8")
                         self.kpress(btn)
                 elif signal.action == GSSP.RR:
                     if signal.special == GSSP.UP:
-                        self.keyboard_control.release(keyboard.Key.up)
+                        pydirectinput.keyUp("up")
                     elif signal.special == GSSP.DOWN:
-                        self.keyboard_control.release(keyboard.Key.down)
+                        pydirectinput.keyUp("down")
                     elif signal.special == GSSP.LEFT:
-                        self.keyboard_control.release(keyboard.Key.left)
+                        pydirectinput.keyUp("left")
                     elif signal.special == GSSP.RIGHT:
-                        self.keyboard_control.release(keyboard.Key.right)
+                        pydirectinput.keyUp("right")
                     elif signal.special == GSSP.ENTER:
-                        self.keyboard_control.release(keyboard.Key.enter)
+                        pydirectinput.keyUp("enter")
+                    elif signal.special == GSSP.SPACE:
+                        pydirectinput.keyDown("space")
+                    elif signal.special == GSSP.CT:
+                        pydirectinput.keyDown("ctrl")
+                    elif signal.special == GSSP.SHIFT:
+                        pydirectinput.keyDown("shift")
                     else:
                         btn = signal.btn.decode("utf-8")
                         print("call release", btn)
                         self.krelease(btn)
 
     def mmove(self, x, y):
-        self.mouse_control.position = (x, y)
+        # self.mouse_control.position = (x, y)
+        pydirectinput.moveTo(x, y)
         # self.parent.logs.appendPlainText(f'Keyboard/Mouse: {self.mouse_control.position}')
 
     def mpress(self, left):
         if left == 1:
             # self.mouse_control.press(mouse.Button.left)
-            pyautogui.mouseDown()
+            pydirectinput.mouseDown()
             print('Keyboard/Mouse_left: mouse has press')
         elif left == 0:
             # self.mouse_control.press(mouse.Button.right)
-            pyautogui.mouseDown(button='right')
+            pydirectinput.mouseDown(button='right')
             print('Keyboard/Mouse_right: mouse has press')
         # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has press')
         # print('Keyboard/Mouse: mouse has press')
@@ -108,29 +121,32 @@ class ServerSide(threading.Thread):
     def mrelease(self, left):
         if left==1 :
             # self.mouse_control.release(mouse.Button.left)
-            pyautogui.mouseUp()
+            pydirectinput.mouseUp()
             print('Keyboard/Mouse_left: mouse has release')
         if left==0 :
             # self.mouse_control.release(mouse.Button.right)
-            pyautogui.mouseUp(button='right')
+            pydirectinput.mouseUp(button='right')
             print('Keyboard/Mouse_right: mouse has release')
         # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has release')
         print('Keyboard/Mouse: mouse has release')
 
     def mscroll(self, x, y):
-        # self.mouse_control.scroll(x, y)
-        pyautogui.scroll(x)
+        self.mouse_control.scroll(x, y)
         # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse scroll',x,y)
 
     def kpress(self, a):
-        self.keyboard_control.press(a)
+        # self.keyboard_control.press(a)
+        pydirectinput.keyDown(a)
         # self.parent.logs.appendPlainText(f'Keyboard/Mouse: keyboard press {a}')
         print(f'Keyboard/Mouse: keyboard press {a}')
 
     def krelease(self, a):
-        self.keyboard_control.release(a)
+        #self.keyboard_control.release(a)
+        pydirectinput.keyUp(a)
         # self.parent.logs.appendPlainText(f'Keyboard/Mouse: keyboard release {a}')
         print(f'Keyboard/Mouse: keyboard release {a}')
 
     def kill(self):
         self.stop = True
+
+

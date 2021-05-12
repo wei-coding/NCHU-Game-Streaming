@@ -91,6 +91,9 @@ class GSSP:
     RIGHT = 4
     ENTER = 5
     ESC = 6
+    SPACE = 7
+    CT = 8
+    SHIFT = 9
     NO_BTN = b'\0'
     CTRL = 2
     STOP = 4
