@@ -46,6 +46,8 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         self.server_thread.finished.connect(self.client_connected)
         self.signal_service.start()
 
+
+
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(False)
 
@@ -138,3 +140,5 @@ if __name__ == "__main__":
     window = Main()
     window.show()
     sys.exit(app.exec_())
+
+# import pydirectinput

@@ -117,6 +117,12 @@ class KeyboardThread(threading.Thread):
                 action = GSSP.LEFT
             elif key == keyboard.Key.right:
                 action = GSSP.RIGHT
+            elif key == keyboard.Key.space:
+                action = GSSP.SPACE
+            elif key == keyboard.Key.ctrl_l:
+                action = GSSP.CT
+            elif key == keyboard.Key.shift:
+                action == GSSP.SHIFT
             else:
                 action = GSSP.ENTER
 
@@ -141,6 +147,9 @@ class KeyboardThread(threading.Thread):
                 keyboard.Key.left: GSSP.LEFT,
                 keyboard.Key.right: GSSP.RIGHT,
                 keyboard.Key.enter: GSSP.ENTER,
+                keyboard.Key.space: GSSP.SPACE,
+                keyboard.Key.ctrl_l: GSSP.CT,
+                keyboard.Key.shift: GSSP.SHIFT,
             }
             data = GSSPBody(GSSP.KEYBOARD, GSSP.RR, 0, 0, 0, switch[key])
             self.parent.client.send(data)
