@@ -91,11 +91,11 @@ class ServerSide(threading.Thread):
                     elif signal.special == GSSP.ENTER:
                         pydirectinput.keyUp("enter")
                     elif signal.special == GSSP.SPACE:
-                        pydirectinput.keyDown("space")
+                        pydirectinput.keyUp("space")
                     elif signal.special == GSSP.CT:
-                        pydirectinput.keyDown("ctrl")
+                        pydirectinput.keyUp("ctrl")
                     elif signal.special == GSSP.SHIFT:
-                        pydirectinput.keyDown("shift")
+                        pydirectinput.keyUp("shift")
                     else:
                         btn = signal.btn.decode("utf-8")
                         print("call release", btn)

@@ -16,6 +16,7 @@ import win32api
 import win32con
 from PIL import ImageGrab, BmpImagePlugin
 import numpy as np
+import io
 
 
 class FrameSegment(threading.Thread):
@@ -31,7 +32,7 @@ class FrameSegment(threading.Thread):
     def __init__(self, sock, addr, port):
         threading.Thread.__init__(self)
         self.s = sock
-        self.scn = PrintScreen()
+        self.scn = FastScreenshots()
         # self.scn = QtScreenShot()
         self.signal = True
         self.seq = -1
@@ -53,6 +54,9 @@ class FrameSegment(threading.Thread):
             self.frame %= 256
             if img is not None:
                 dat = self.JPEG.encode(img, quality=self.QUALITY)
+                # dat = io.BytesIO()
+                # img.save(dat, format='JPEG', quality=50)
+                # dat = dat.getvalue()
                 size = len(dat)
                 # print(size)
                 count = math.ceil(size / self.MAX_IMAGE_DGRAM)
@@ -66,6 +70,7 @@ class FrameSegment(threading.Thread):
                     self.s.sendto(send_data, (self.addr, self.port))
                     array_pos_start = array_pos_end
                     count -= 1
+                del dat
             else:
                 time.sleep(0.01)
 
@@ -136,7 +141,7 @@ class FastScreenshots:
             return False, None
 
     def stop(self):
-        self.d.stop()
+        self.d.kill()
         self.clear_service.stop()
 
 
@@ -152,6 +157,7 @@ class PrintScreen(threading.Thread):
 
     def run(self):
         while not self.stop:
+            time.sleep(0.0001)
             win32api.keybd_event(win32con.VK_SNAPSHOT, 0)
             img = ImageGrab.grabclipboard()
             if img is not None:
@@ -160,7 +166,7 @@ class PrintScreen(threading.Thread):
                 continue
 
     def get_latest_frame(self):
-        return self.pop_img()
+        return True, self.pop_img()
 
     def push_img(self, img):
         self.rear = (self.rear + 1) % self.size
@@ -175,7 +181,7 @@ class PrintScreen(threading.Thread):
         self.last_frame = self.buf[self.front]
         return self.last_frame
 
-    def stop(self):
+    def kill(self):
         self.stop = True
 
 
