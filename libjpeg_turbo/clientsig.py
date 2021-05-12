@@ -134,13 +134,16 @@ class KeyboardThread(threading.Thread):
                 self.parent.client.send(data)
                 exit(1)
             print('{0} released'.format(key))
-
-            switch = {
-                keyboard.Key.up: GSSP.UP,
-                keyboard.Key.down: GSSP.DOWN,
-                keyboard.Key.left: GSSP.LEFT,
-                keyboard.Key.right: GSSP.RIGHT,
-                keyboard.Key.enter: GSSP.ENTER,
-            }
-            data = GSSPBody(GSSP.KEYBOARD, GSSP.RR, 0, 0, 0, switch[key])
+            action = 0
+            if key == keyboard.Key.up:
+                action = GSSP.UP
+            elif key == keyboard.Key.down:
+                action = GSSP.DOWN
+            elif key == keyboard.Key.left:
+                action = GSSP.LEFT
+            elif key == keyboard.Key.right:
+                action = GSSP.RIGHT
+            else:
+                action = GSSP.ENTER
+            data = GSSPBody(GSSP.KEYBOARD, GSSP.RR, 0, 0, 0, action)
             self.parent.client.send(data)

@@ -12,6 +12,10 @@ from PyQt5.QtCore import *
 import struct
 import select
 from ctypes import *
+import win32api
+import win32con
+from PIL import ImageGrab, BmpImagePlugin
+import numpy as np
 
 
 class FrameSegment(threading.Thread):
@@ -27,7 +31,7 @@ class FrameSegment(threading.Thread):
     def __init__(self, sock, addr, port):
         threading.Thread.__init__(self)
         self.s = sock
-        self.scn = FastScreenshots()
+        self.scn = PrintScreen()
         # self.scn = QtScreenShot()
         self.signal = True
         self.seq = -1
@@ -131,10 +135,48 @@ class FastScreenshots:
         else:
             return False, None
 
-
     def stop(self):
         self.d.stop()
         self.clear_service.stop()
+
+
+class PrintScreen(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.stop = False
+        self.buf = np.zeros(100, dtype=BmpImagePlugin.BmpImageFile)
+        self.rear = 0
+        self.front = 0
+        self.size = 100
+        self.last_frame = None
+
+    def run(self):
+        while not self.stop:
+            win32api.keybd_event(win32con.VK_SNAPSHOT, 0)
+            img = ImageGrab.grabclipboard()
+            if img is not None:
+                self.push_img(img)
+            else:
+                continue
+
+    def get_latest_frame(self):
+        return self.pop_img()
+
+    def push_img(self, img):
+        self.rear = (self.rear + 1) % self.size
+        if self.rear == self.front:
+            return
+        self.buf[self.rear] = img
+
+    def pop_img(self):
+        if self.front == self.rear:
+            return self.last_frame
+        self.front = (self.front + 1) % self.size
+        self.last_frame = self.buf[self.front]
+        return self.last_frame
+
+    def stop(self):
+        self.stop = True
 
 
 class QtScreenShot(threading.Thread):

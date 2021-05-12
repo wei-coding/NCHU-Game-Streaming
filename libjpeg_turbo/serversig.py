@@ -37,7 +37,6 @@ class ServerSide(threading.Thread):
         self.keyboard_control = keyboard.Controller()
 
         while not self.stop:
-            next_signal = None
             signal = None
             try:
                 clientMessage = (self.conn.recv(8))
@@ -91,8 +90,7 @@ class ServerSide(threading.Thread):
                         self.krelease(btn)
 
     def mmove(self, x, y):
-        # self.mouse_control.position = (x, y)
-        pyautogui.moveTo(x, y)
+        self.mouse_control.position = (x, y)
         # self.parent.logs.appendPlainText(f'Keyboard/Mouse: {self.mouse_control.position}')
 
     def mpress(self, left):
