@@ -110,7 +110,7 @@ class ShowImage(threading.Thread):
         while self.show:
             try:
                 cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
-                # cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+                cv2.setWindowProperty('frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                 # cv2.setWindowProperty('frame', cv2.WND_PROP_OPENGL, 1)
                 cv2.imshow('frame', self.pop_img())
                 cv2.waitKey(1)

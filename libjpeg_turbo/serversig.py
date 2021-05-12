@@ -10,6 +10,7 @@ import traceback
 
 from pynput import keyboard
 from pynput import mouse
+import pyautogui
 
 from protocol import *
 
@@ -90,31 +91,37 @@ class ServerSide(threading.Thread):
                         self.krelease(btn)
 
     def mmove(self, x, y):
-        self.mouse_control.position = (x, y)
+        # self.mouse_control.position = (x, y)
+        pyautogui.moveTo(x, y)
         # self.parent.logs.appendPlainText(f'Keyboard/Mouse: {self.mouse_control.position}')
 
-    def mpress(self,left):
+    def mpress(self, left):
         if left == 1:
-            self.mouse_control.press(mouse.Button.left)
+            # self.mouse_control.press(mouse.Button.left)
+            pyautogui.mouseDown()
             print('Keyboard/Mouse_left: mouse has press')
         elif left == 0:
-            self.mouse_control.press(mouse.Button.right)
+            # self.mouse_control.press(mouse.Button.right)
+            pyautogui.mouseDown(button='right')
             print('Keyboard/Mouse_right: mouse has press')
         # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has press')
         # print('Keyboard/Mouse: mouse has press')
 
-    def mrelease(self,left):
+    def mrelease(self, left):
         if left==1 :
-            self.mouse_control.release(mouse.Button.left)
+            # self.mouse_control.release(mouse.Button.left)
+            pyautogui.mouseUp()
             print('Keyboard/Mouse_left: mouse has release')
         if left==0 :
-            self.mouse_control.release(mouse.Button.right)
+            # self.mouse_control.release(mouse.Button.right)
+            pyautogui.mouseUp(button='right')
             print('Keyboard/Mouse_right: mouse has release')
         # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse has release')
         print('Keyboard/Mouse: mouse has release')
 
     def mscroll(self, x, y):
-        self.mouse_control.scroll(x, y)
+        # self.mouse_control.scroll(x, y)
+        pyautogui.scroll(x)
         # self.parent.logs.appendPlainText('Keyboard/Mouse: mouse scroll',x,y)
 
     def kpress(self, a):
