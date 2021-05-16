@@ -23,6 +23,9 @@ about GSPHeader:
     - timestamp: as it is
 
 about GSSPBody:
+
+* struct
+
     - type:
         + 0: mouse
         + 1: keyboard
@@ -46,6 +49,9 @@ about GSSPBody:
         + 4: right
         + 5: enter
         + 6: esc
+        + 7: space
+        + 8: ctrl
+        + 9: shift
 """
 from ctypes import *
 

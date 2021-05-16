@@ -8,7 +8,6 @@ import traceback
 import threading
 import struct
 import numpy as np
-from concurrent.futures import ThreadPoolExecutor
 
 
 MAX_DGRAM = GSP.PACKET_SIZE
