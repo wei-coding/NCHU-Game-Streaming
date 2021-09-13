@@ -4,3 +4,5 @@ __pycache__/
 .vscode/
 *.py[cod]
 reference
+*.docx
+*.p[po]tx
